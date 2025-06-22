@@ -124,6 +124,10 @@ class DataSeeder extends Seeder
                 'category' => 'Attendance & incidents'
             ],
             [
+                'name' => 'List sites',
+                'category' => 'Site'
+            ],
+            [
                 'name' => 'Add sites',
                 'category' => 'Site'
             ],
