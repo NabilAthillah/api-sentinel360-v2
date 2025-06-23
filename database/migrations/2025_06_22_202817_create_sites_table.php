@@ -26,7 +26,7 @@ return new class extends Migration
             $table->string('postal_code');
             $table->string('lat');
             $table->string('long');
-            $table->string('organisation_char')->nullable();
+            $table->string('organisation_chart')->nullable();
             $table->timestamps();
         });
     }

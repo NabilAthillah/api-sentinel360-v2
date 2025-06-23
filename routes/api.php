@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\SiteController;
 use App\Models\AttendanceSetting;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
@@ -53,5 +54,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(AttendanceSettingController::class)->name('attendance-settings.')->prefix('attendance-settings')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::post('/', 'update')->name('update');
+    });
+
+    Route::controller(SiteController::class)->name('sites.')->prefix('sites')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/', 'store')->name('store');
+        Route::put('/{id}', 'update')->name('update');
+        Route::post('/{id}', 'destroy')->name('destroy');
     });
 });
