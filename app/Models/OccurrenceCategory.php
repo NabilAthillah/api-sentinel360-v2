@@ -5,18 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
-class Site extends Model
+class OccurrenceCategory extends Model
 {
     use HasUuids;
 
-    protected $table = 'sites';
+    protected $table = 'occurrence_category';
     protected $primaryKey = 'id';
     protected $keyType = 'string';
     public $incrementing = false;
     protected $guarded = [];
 
-    public function routes()
+    public function occurrences()
     {
-        return $this->hasMany(Route::class, 'id_site', 'id');
+        return $this->hasMany(Occurrence::class, 'id_category', 'id');
     }
 }

@@ -95,6 +95,25 @@ class SiteController extends Controller
         }
     }
 
+    public function show($id)
+    {
+        $site = Site::with('routes')->where('id', $id)->first();
+
+        if (!$site) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Site not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'site' => $site
+            ]
+        ]);
+    }
+
     public function update(Request $request, $id)
     {
         try {

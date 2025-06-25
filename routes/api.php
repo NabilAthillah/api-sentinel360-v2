@@ -2,9 +2,13 @@
 
 use App\Http\Controllers\Api\AttendanceSettingController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ClientInfoController;
 use App\Http\Controllers\Api\EmployeeController;
+use App\Http\Controllers\Api\OccurrenceCategoryController;
+use App\Http\Controllers\Api\OccurrenceController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\RouteController;
 use App\Http\Controllers\Api\SiteController;
 use App\Models\AttendanceSetting;
 use Illuminate\Http\Request;
@@ -58,8 +62,32 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::controller(SiteController::class)->name('sites.')->prefix('sites')->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::get('/{id}', 'show')->name('show');
         Route::post('/', 'store')->name('store');
         Route::put('/{id}', 'update')->name('update');
         Route::post('/{id}', 'destroy')->name('destroy');
+    });
+
+    Route::controller(RouteController::class)->name('routes.')->prefix('routes')->group(function () {
+        Route::post('/', 'store')->name('store');
+        Route::put('/{id}', 'update')->name('update');
+        Route::post('/{id}', 'destroy')->name('destroy');
+    });
+
+    Route::controller(OccurrenceCategoryController::class)->name('occurrence-categories.')->prefix('occurrence-categories')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/', 'store')->name('store');
+        Route::put('/{id}', 'update')->name('update');
+    });
+
+    Route::controller(OccurrenceController::class)->name('occurrences.')->prefix('occurrences')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/', 'store')->name('store');
+        Route::put('/{id}', 'update')->name('update');
+    });
+
+    Route::controller(ClientInfoController::class)->name('client-info.')->prefix('client-info')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::put('/{id}', 'update')->name('update');
     });
 });

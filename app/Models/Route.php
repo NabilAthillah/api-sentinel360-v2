@@ -5,18 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
-class Site extends Model
+class Route extends Model
 {
     use HasUuids;
 
-    protected $table = 'sites';
+    protected $table = 'routes';
     protected $primaryKey = 'id';
     protected $keyType = 'string';
     public $incrementing = false;
     protected $guarded = [];
 
-    public function routes()
+    public function site()
     {
-        return $this->hasMany(Route::class, 'id_site', 'id');
+        return $this->belongsTo(Site::class, 'id_site', 'id');
     }
 }
