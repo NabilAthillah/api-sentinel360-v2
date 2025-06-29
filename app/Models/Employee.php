@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Employee extends Model
 {
     use HasUuids;
-    
+
     protected $table = 'employees';
     protected $primaryKey = 'id';
     protected $keyType = 'string';
@@ -23,5 +23,10 @@ class Employee extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'id_user', 'id');
+    }
+
+    public function sites()
+    {
+        return $this->hasMany(SiteUser::class, 'id_employee', 'id');
     }
 }

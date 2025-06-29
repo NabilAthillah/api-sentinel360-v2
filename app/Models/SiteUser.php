@@ -5,23 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
-class Site extends Model
+class SiteUser extends Model
 {
     use HasUuids;
 
-    protected $table = 'sites';
+    protected $table = 'site_user';
     protected $primaryKey = 'id';
     protected $keyType = 'string';
     public $incrementing = false;
     protected $guarded = [];
 
-    public function routes()
+    public function site()
     {
-        return $this->hasMany(Route::class, 'id_site', 'id');
+        return $this->belongsTo(Site::class, 'id_site', 'id');
     }
 
-    public function employees()
+    public function employee()
     {
-        return $this->hasMany(SIteUser::class, 'id_user', 'id');
+        return $this->belongsTo(Employee::class, 'id_employee', 'id');
     }
 }

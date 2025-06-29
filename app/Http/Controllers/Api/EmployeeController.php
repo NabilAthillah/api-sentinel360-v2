@@ -80,7 +80,6 @@ class EmployeeController extends Controller
                 'briefing_date' => $request->briefing_date,
                 'id_user' => $user_id,
                 'reporting_to' => $request->reporting_to,
-                'shift' => $request->shift
             ]);
 
             DB::commit();

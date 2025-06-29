@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\RouteController;
 use App\Http\Controllers\Api\SiteController;
+use App\Http\Controllers\Api\SiteUserController;
 use App\Models\AttendanceSetting;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
@@ -65,6 +66,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}', 'show')->name('show');
         Route::post('/', 'store')->name('store');
         Route::put('/{id}', 'update')->name('update');
+        Route::post('/disallocation', 'disallocation')->name('disallocation');
         Route::post('/{id}', 'destroy')->name('destroy');
     });
 
@@ -89,5 +91,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(ClientInfoController::class)->name('client-info.')->prefix('client-info')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::put('/{id}', 'update')->name('update');
+    });
+
+    Route::controller(SiteUserController::class)->name('site-user.')->prefix('site-user')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/disallocation', 'disallocation')->name('disallocation');
+        Route::put('/{id}', 'update')->name('update');
+        Route::put('/allocation/{id}', 'allocation')->name('allocation');
     });
 });

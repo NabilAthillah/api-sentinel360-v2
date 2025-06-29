@@ -3,10 +3,13 @@
 namespace Database\Seeders;
 
 use App\Models\AttendanceSetting;
+use App\Models\ClientInfo;
+use App\Models\Employee;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\RolePermission;
 use App\Models\User;
+use Carbon\Carbon;
 use Hash;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -189,13 +192,33 @@ class DataSeeder extends Seeder
             ]);
         }
 
+        $user_id = Uuid::uuid4();
+
         User::create([
-            'id' => Uuid::uuid4(),
+            'id' => $user_id,
             'name' => 'Admin User',
             'email' => 'admin@sentinel360.com',
             'password' => Hash::make('admin123'),
             'id_role' => $role->id,
             'mobile' => '+1234567890',
+        ]);
+
+        $employee_id = Uuid::uuid4();
+
+        Employee::create([
+            'id' => $employee_id,
+            'nric_fin_no' => '111111',
+            'briefing_date' => Carbon::now(),
+            'id_user' => $user_id,
+        ]);
+
+        ClientInfo::create([
+            'name' => 'Sentinel Security Agency',
+            'reg_no' => '100302565E',
+            'address' => '8 UBi Avenue, #04-08, UBi Avenue, 609964',
+            'contact' => '84749693',
+            'email' => 'info@sentinelgp.com',
+            'website' => 'www.sentinelgp.com'
         ]);
 
         AttendanceSetting::create([

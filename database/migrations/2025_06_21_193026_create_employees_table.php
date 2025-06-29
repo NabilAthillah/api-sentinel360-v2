@@ -18,8 +18,7 @@ return new class extends Migration
             $table->string('id_user');
             $table->foreign('id_user')->references('id')->on('users');
             $table->string('reporting_to')->nullable();
-            $table->foreign('reporting_to')->references('id')->on('users');
-            $table->enum('shift', ['day', 'night', 'relief']);
+            $table->foreign('reporting_to')->references('id')->on('employees');
             $table->timestamps();
         });
     }
