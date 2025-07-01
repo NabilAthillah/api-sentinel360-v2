@@ -119,5 +119,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::put('/{id}', 'update')->name('update');
         Route::post('/', 'store')->name('store');
+        Route::post('/{id}', 'destroy')->name('destroy');
     });
 });

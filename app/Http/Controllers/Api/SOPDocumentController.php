@@ -118,4 +118,38 @@ class SOPDocumentController extends Controller
             ], 500);
         }
     }
+
+    public function destroy($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $sop = SOPDocument::where('id', $id)->first();
+
+            if (!$sop) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'SOP Document not found'
+                ], 404);
+            }
+
+            if ($sop->document != '') {
+                Storage::delete($sop->document);
+            }
+
+            $sop->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'SOP Document deleted successfully'
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Oops! Something went wrong'
+            ], 500);
+        }
+    }
 }
