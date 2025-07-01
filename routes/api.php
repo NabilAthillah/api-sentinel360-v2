@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClientInfoController;
 use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\EmployeeDocumentController;
+use App\Http\Controllers\Api\IncidentTypeController;
 use App\Http\Controllers\Api\OccurrenceCategoryController;
 use App\Http\Controllers\Api\OccurrenceController;
 use App\Http\Controllers\Api\PermissionController;
@@ -104,5 +105,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(EmployeeDocumentController::class)->name('employee-documents.')->prefix('employee-documents')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::put('/{id}', 'update')->name('update');
+        Route::post('/', 'store')->name('store');
+    });
+
+    Route::controller(IncidentTypeController::class)->name('incident-types.')->prefix('incident-types')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::put('/{id}', 'update')->name('update');
+        Route::post('/', 'store')->name('store');
     });
 });
