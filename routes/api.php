@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\RouteController;
 use App\Http\Controllers\Api\SiteController;
 use App\Http\Controllers\Api\SiteUserController;
 use App\Models\AttendanceSetting;
+use App\Models\SOPDocument;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
@@ -109,6 +110,12 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::controller(IncidentTypeController::class)->name('incident-types.')->prefix('incident-types')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::put('/{id}', 'update')->name('update');
+        Route::post('/', 'store')->name('store');
+    });
+
+    Route::controller(SOPDocument::class)->name('sop-documents.')->prefix('sop-documents')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::put('/{id}', 'update')->name('update');
         Route::post('/', 'store')->name('store');

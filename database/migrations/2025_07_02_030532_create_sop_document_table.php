@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('incident_types', function (Blueprint $table) {
+        Schema::create('sop_documents', function (Blueprint $table) {
             $table->uuid('id')->primary()->unique();
             $table->string('name');
-            $table->enum('status', ['active', 'deactive'])->default('active');
+            $table->string('document');
             $table->timestamps();
         });
     }
@@ -24,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('incident_types');
+        Schema::dropIfExists('sop_document');
     }
 };
