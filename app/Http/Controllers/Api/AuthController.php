@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use DB;
 use Hash;
 use Illuminate\Http\Request;
+use Storage;
 
 class AuthController extends Controller
 {
@@ -98,9 +99,27 @@ class AuthController extends Controller
                 ], 401);
             }
 
+            $pathImage = '';
+
+            if ($request->profile) {
+                if ($user->profile) {
+                    Storage::delete($user->profile);
+                }
+
+                $image = $request->profile;
+                $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $image));
+                $imageName = uniqid() . '.png';
+                Storage::disk('public')->put("users/profile/{$imageName}", $imageData);
+                $pathImage = "users/profile/{$imageName}";
+
+                $user->update([
+                    'profile_image' => $pathImage,
+                ]);
+            }
+
             if ($user->email != $request->email) {
                 $exists = User::where('email', $request->email)->first();
-    
+
                 if ($exists) {
                     return response()->json([
                         'success' => false,
