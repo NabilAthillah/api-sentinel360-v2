@@ -35,19 +35,23 @@ class ClientInfoController extends Controller
             $pathChart = '';
 
             if ($request->logo) {
-                if ($info->logo != '') {
+                if ($info->logo) {
                     Storage::delete($info->logo);
                 }
 
                 $image = $request->logo;
                 $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $image));
                 $imageName = uniqid() . '.png';
-                Storage::disk('public')->put("sites/logo/{$imageName}", $imageData);
+                Storage::disk('public')->put("client/logo/{$imageName}", $imageData);
                 $pathImage = "client/logo/{$imageName}";
+
+                $info->update([
+                    'logo' => $pathImage,
+                ]);
             }
 
             if ($request->chart) {
-                if ($info->chart != '') {
+                if ($info->chart) {
                     Storage::delete($info->chart);
                 }
 
@@ -56,6 +60,10 @@ class ClientInfoController extends Controller
                 $imageName = uniqid() . '.png';
                 Storage::disk('public')->put("client/charts/{$imageName}", $imageData);
                 $pathChart = "client/charts/{$imageName}";
+
+                $info->update([
+                    'chart' => $pathChart,
+                ]);
             }
 
             $info->update([
@@ -65,8 +73,6 @@ class ClientInfoController extends Controller
                 'contact' => $request->contact,
                 'website' => $request->website,
                 'email' => $request->email,
-                'logo' => $pathImage,
-                'chart' => $pathChart,
             ]);
 
             DB::commit();
