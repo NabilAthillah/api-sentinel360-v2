@@ -124,7 +124,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}', 'destroy')->name('destroy');
     });
 
-    Route::controller(EmployeeDocumentPivotController::class)->name('sop-documents.')->prefix('sop-documents')->group(function () {
+    Route::controller(EmployeeDocumentPivotController::class)->name('employee-document.')->prefix('employee-document')->group(function () {
         Route::post('/', 'store')->name('store');
     });
 });
