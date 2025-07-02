@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClientInfoController;
 use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\EmployeeDocumentController;
+use App\Http\Controllers\Api\EmployeeDocumentPivotController;
 use App\Http\Controllers\Api\IncidentTypeController;
 use App\Http\Controllers\Api\OccurrenceCategoryController;
 use App\Http\Controllers\Api\OccurrenceController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\RouteController;
 use App\Http\Controllers\Api\SiteController;
 use App\Http\Controllers\Api\SiteUserController;
+use App\Http\Controllers\Api\SOPDocumentController;
 use App\Models\AttendanceSetting;
 use App\Models\SOPDocument;
 use Illuminate\Http\Request;
@@ -115,10 +117,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', 'store')->name('store');
     });
 
-    Route::controller(SOPDocument::class)->name('sop-documents.')->prefix('sop-documents')->group(function () {
+    Route::controller(SOPDocumentController::class)->name('sop-documents.')->prefix('sop-documents')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::put('/{id}', 'update')->name('update');
         Route::post('/', 'store')->name('store');
         Route::post('/{id}', 'destroy')->name('destroy');
+    });
+
+    Route::controller(EmployeeDocumentPivotController::class)->name('sop-documents.')->prefix('sop-documents')->group(function () {
+        Route::post('/', 'store')->name('store');
     });
 });

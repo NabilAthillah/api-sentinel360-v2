@@ -29,4 +29,9 @@ class Employee extends Model
     {
         return $this->hasMany(SiteUser::class, 'id_employee', 'id');
     }
+
+    public function documents()
+    {
+        return $this->hasMany(EmployeeDocumentPivot::class, 'id_employee', 'id');
+    }
 }
