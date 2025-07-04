@@ -14,4 +14,9 @@ class IncidentType extends Model
     protected $keyType = 'string';
     public $incrementing = false;
     protected $guarded = [];
+
+    public function incident()
+    {
+        return $this->hasMany(Incident::class);
+    }
 }

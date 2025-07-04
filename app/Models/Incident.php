@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+
+class Incident extends Model
+{
+    use HasUuids;
+
+    protected $table = 'incidents';
+    protected $primaryKey = 'id';
+    protected $keyType = 'string';
+    public $incrementing = false;
+    protected $guarded = [];
+
+    
+/*************  ✨ Windsurf Command ⭐  *************/
+    /**
+     * The site that this incident belongs to.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+/*******  258b7efe-088c-480f-95fa-085f51b9cfbe  *******/
+    public function site()
+    {
+        return $this->belongsTo(Site::class, 'site_id', 'id');
+    }
+
+    public function incidentType()
+    {
+        return $this->belongsTo(IncidentType::class, 'incident_type_id', 'id');
+    }
+}

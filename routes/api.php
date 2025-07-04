@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\ClientInfoController;
 use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\EmployeeDocumentController;
 use App\Http\Controllers\Api\EmployeeDocumentPivotController;
+use App\Http\Controllers\Api\IncidentController;
 use App\Http\Controllers\Api\IncidentTypeController;
 use App\Http\Controllers\Api\OccurrenceCategoryController;
 use App\Http\Controllers\Api\OccurrenceController;
@@ -43,6 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(EmployeeController::class)->name('employees.')->prefix('employees')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::post('/', 'store')->name('store');
+        Route::put('/{id}', 'update')->name('update');
         Route::post('/delete/{id}', 'destroy')->name('destroy');
     });
 
@@ -126,5 +128,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::controller(EmployeeDocumentPivotController::class)->name('employee-document.')->prefix('employee-document')->group(function () {
         Route::post('/', 'store')->name('store');
+    });
+
+    Route::controller(IncidentController::class)->name('incidents.')->prefix('incidents')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/{id}', 'show')->name('show');
+        Route::post('/', 'store')->name('store');
+        Route::put('/{id}', 'update')->name('update');
+        Route::delete('/{id}', 'destroy')->name('destroy');
     });
 });

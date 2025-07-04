@@ -51,7 +51,8 @@ class SOPDocumentController extends Controller
                 $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $image));
                 $imageName = uniqid() . '.png';
                 Storage::disk('public')->put("sop_doc/images/{$imageName}", $imageData);
-                $pathImage = "dop_doc/images/{$imageName}";
+                $pathImage = "sop_doc/images/{$imageName}";
+
 
                 $sop->update([
                     'document' => $pathImage
@@ -68,7 +69,6 @@ class SOPDocumentController extends Controller
                 'success' => true,
                 'message' => 'SOP Doc updated successfully'
             ], 200);
-
         } catch (\Throwable $th) {
             //throw $th;
             return response()->json([
@@ -81,26 +81,35 @@ class SOPDocumentController extends Controller
     public function store(Request $request)
     {
         try {
-            //code...
             DB::beginTransaction();
 
             $pathImage = '';
 
-            $image = $request->image;
-            $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $image));
-            $imageName = uniqid() . '.png';
-            Storage::disk('public')->put("sop_doc/images/{$imageName}", $imageData);
-            $pathImage = "sop_doc/images/{$imageName}";
+            if ($request->document) {
+                $image = $request->document;
+                $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $image));
+                if ($imageData === false) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid base64 image'
+                    ], 400);
+                }
+
+                $imageName = uniqid() . '.png';
+                Storage::disk('public')->put("sop_doc/images/{$imageName}", $imageData);
+                $pathImage = "sop_doc/images/{$imageName}";
+            }
 
             $sop = SOPDocument::create([
                 'name' => $request->name,
-                'document' => $pathImage
+                'document' => $pathImage,
             ]);
 
             if (!$sop) {
+                DB::rollBack();
                 return response()->json([
                     'success' => false,
-                    'message' => 'Oops! Somtehing went wrong'
+                    'message' => 'Oops! Something went wrong'
                 ], 500);
             }
 
@@ -108,16 +117,19 @@ class SOPDocumentController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'SOP Doc created successfully'
-            ], 200);
+                'message' => 'SOP Doc created successfully',
+                'data' => $sop
+            ]);
         } catch (\Throwable $th) {
-            //throw $th;
+            DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Somtehing went wrong'
+                'message' => 'Oops! Something went wrong',
+                'error' => $th->getMessage()
             ], 500);
         }
     }
+
 
     public function destroy($id)
     {

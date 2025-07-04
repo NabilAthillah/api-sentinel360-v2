@@ -120,15 +120,12 @@ class EmployeeController extends Controller
             ], 500);
         }
     }
-
     public function update(Request $request, $id)
     {
         try {
-            //code...
             DB::beginTransaction();
 
             $employee = Employee::where('id', $id)->first();
-
             if (!$employee) {
                 return response()->json([
                     'success' => false,
@@ -136,8 +133,7 @@ class EmployeeController extends Controller
                 ], 404);
             }
 
-            $user = User::with('employee')->where('id', $employee->id_user)->first();
-
+            $user = User::where('id', $employee->id_user)->first();
             if (!$user) {
                 return response()->json([
                     'success' => false,
@@ -145,15 +141,16 @@ class EmployeeController extends Controller
                 ], 404);
             }
 
-            $employee->update([
-                'nric_fin_no' => $request->nric_fin_no,
-                'briefing_date' => $request->briefing_date,
-                'id_user' => $user->id_user,
-                'reporting_to' => $request->reporting_to,
-                'birth' => $request->birth,
-                'briefing_conducted' => $request->briefing_conducted,
-            ]);
+            // Check email conflict
+            $existingUser = User::where('email', $request->email)->where('id', '!=', $user->id)->first();
+            if ($existingUser) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Employee with this email already exists'
+                ], 409);
+            }
 
+            // Update user basic info
             $user->update([
                 'name' => $request->name,
                 'mobile' => $request->mobile,
@@ -163,62 +160,57 @@ class EmployeeController extends Controller
                 'id_role' => $request->id_role
             ]);
 
-            $pathImage = '';
-
+            // ✅ Handle profile image base64
             if ($request->profile) {
-                if ($user->profile_image != '') {
-                    if (!Storage::delete($user->profile_image)) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Oops! Something went wrong'
-                        ], 500);
-                    }
+                // Hapus gambar lama
+                if ($user->profile_image && Storage::disk('public')->exists($user->profile_image)) {
+                    Storage::disk('public')->delete($user->profile_image);
                 }
 
                 $image = $request->profile;
-                $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $image));
-                $imageName = uniqid() . '.png';
-                Storage::disk('public')->put("users/profile/{$imageName}", $imageData);
-                $pathImage = "users/profile/{$imageName}";
 
-                $user->update([
-                    'profile_image' => $pathImage
-                ]);
+                if (preg_match('/^data:image\/(\w+);base64,/', $image, $type)) {
+                    $image = substr($image, strpos($image, ',') + 1); // Buang header
+                    $type = strtolower($type[1]); // jpg, png, etc.
+
+                    // Validasi ekstensi
+                    if (!in_array($type, ['jpg', 'jpeg', 'png', 'gif'])) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Invalid image type'
+                        ], 400);
+                    }
+
+                    $image = str_replace(' ', '+', $image);
+                    $imageData = base64_decode($image);
+
+                    if ($imageData === false) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Base64 decoding failed'
+                        ], 400);
+                    }
+
+                    $imageName = uniqid() . '.' . $type;
+                    $pathImage = "users/profile/{$imageName}";
+                    Storage::disk('public')->put($pathImage, $imageData);
+
+                    $user->update(['profile_image' => $pathImage]);
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid base64 image format'
+                    ], 400);
+                }
             }
 
-            $exists = User::where('email', $request->email)->first();
-
-            if ($exists) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Employee with this email already exists'
-                ], 401);
-            }
-
-            $user_id = Uuid::uuid4();
-
-            $user = User::create([
-                'id' => $user_id,
-                'name' => $request->name,
-                'mobile' => $request->mobile,
-                'address' => $request->address,
-                'status' => 'active',
-                'email' => $request->email,
-                'id_role' => $request->id_role
-            ]);
-
-            if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Oops! Something went wrong'
-                ], 500);
-            }
-
-            Employee::create([
+            // Update employee fields
+            $employee->update([
                 'nric_fin_no' => $request->nric_fin_no,
                 'briefing_date' => $request->briefing_date,
-                'id_user' => $user_id,
                 'reporting_to' => $request->reporting_to,
+                'birth' => $request->birth,
+                'briefing_conducted' => $request->briefing_conducted,
                 'q1' => $request->q1,
                 'a1' => $request->a1,
                 'q2' => $request->q2,
@@ -243,14 +235,14 @@ class EmployeeController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Employee updated successfully',
-                'data' => '',
+                'message' => 'Employee updated successfully'
             ], 200);
         } catch (\Throwable $th) {
-            //throw $th;
+            DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Something went wrong'
+                'message' => 'Oops! Something went wrong',
+                'error' => $th->getMessage()
             ], 500);
         }
     }

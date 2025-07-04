@@ -24,4 +24,10 @@ class Site extends Model
     {
         return $this->hasMany(SIteUser::class, 'id_user', 'id');
     }
+
+    public function incident()
+    {
+        return $this->hasMany(Incident::class);
+    }
 }
+
