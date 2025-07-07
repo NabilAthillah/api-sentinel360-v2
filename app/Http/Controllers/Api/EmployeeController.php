@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\User;
 use DB;
-use Hash;
+
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Ramsey\Uuid\Uuid;
 use Storage;
 
@@ -116,7 +117,8 @@ class EmployeeController extends Controller
             //throw $th;
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Something went wrong'
+                'message' => 'Oops! Something went wrong',
+                $th ->getMessage()
             ], 500);
         }
     }
@@ -250,7 +252,6 @@ class EmployeeController extends Controller
     public function destroy(Request $request, $id)
     {
         try {
-            //code...
             DB::beginTransaction();
 
             $employee = Employee::where('id', $id)->first();

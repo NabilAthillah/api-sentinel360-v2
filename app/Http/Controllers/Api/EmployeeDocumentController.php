@@ -56,7 +56,6 @@ class EmployeeDocumentController extends Controller
     public function store(Request $request)
     {
         try {
-            //code...
             DB::beginTransaction();
 
             $category = EmployeeDocument::create([
