@@ -128,6 +128,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::controller(EmployeeDocumentPivotController::class)->name('employee-document.')->prefix('employee-document')->group(function () {
         Route::post('/', 'store')->name('store');
+        Route::get('/{id}', 'index')->name('index');
     });
 
     Route::controller(IncidentController::class)->name('incidents.')->prefix('incidents')->group(function () {

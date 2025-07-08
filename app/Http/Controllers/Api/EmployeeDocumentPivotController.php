@@ -12,6 +12,22 @@ use Storage;
 
 class EmployeeDocumentPivotController extends Controller
 {
+
+    public function index($id)
+    {
+        $data = EmployeeDocumentPivot::where('id_employee', $id)->get();
+
+        $data->transform(function ($item) {
+            $item->url = asset('storage/' . $item->path); 
+            return $item;
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
+    }
+
     public function store(Request $request)
     {
         try {
@@ -33,7 +49,6 @@ class EmployeeDocumentPivotController extends Controller
                 ], 404);
             }
 
-            // Cek dan decode base64
             if (!$request->document || !preg_match('/^data:(.*);base64,/', $request->document, $matches)) {
                 return response()->json([
                     'success' => false,
@@ -41,12 +56,15 @@ class EmployeeDocumentPivotController extends Controller
                 ], 422);
             }
 
-            $mimeType = $matches[1]; 
+            $mimeType = $matches[1];
             $extension = explode('/', $mimeType)[1] ?? 'bin';
 
-            $base64Data = preg_replace('/^data:.*;base64,/', '', $request->document);
-            $fileData = base64_decode($base64Data);
-
+            if ($fileData === false || base64_encode($fileData) !== $base64Data) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid or corrupted base64 data.'
+                ], 422);
+            }
             if ($fileData === false) {
                 return response()->json([
                     'success' => false,
