@@ -84,6 +84,7 @@ class EmployeeController extends Controller
                 'reporting_to' => $request->reporting_to,
                 'birth' => $request->birth,
                 'briefing_conducted' => $request->briefing_conducted,
+                'date_joined' => $request->date_joined,
                 'q1' => $request->q1,
                 'a1' => $request->a1,
                 'q2' => $request->q2,
@@ -117,8 +118,7 @@ class EmployeeController extends Controller
             //throw $th;
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Something went wrong',
-                $th ->getMessage()
+                'message' => 'Oops! Something went wrong' . $th->getMessage(),
             ], 500);
         }
     }
@@ -213,6 +213,7 @@ class EmployeeController extends Controller
                 'reporting_to' => $request->reporting_to,
                 'birth' => $request->birth,
                 'briefing_conducted' => $request->briefing_conducted,
+                'date_joined' => $request->date_joined,
                 'q1' => $request->q1,
                 'a1' => $request->a1,
                 'q2' => $request->q2,
