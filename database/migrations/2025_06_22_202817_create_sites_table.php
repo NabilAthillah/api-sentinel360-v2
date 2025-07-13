@@ -19,14 +19,14 @@ return new class extends Migration
             $table->string('mcst_number')->nullable();
             $table->string('ma_name')->nullable();
             $table->string('mobile')->nullable();
-            $table->string('company_name')->nullable();
+            $table->string('pic')->nullable();
+            $table->foreign('pic')->references('id')->on('users');
             $table->string('address');
-            $table->string('block')->nullable();
-            $table->string('unit')->nullable();
             $table->string('postal_code');
             $table->string('lat');
             $table->string('long');
             $table->string('organisation_chart')->nullable();
+            $table->string('nfc_tag')->nullable();
             $table->timestamps();
         });
     }

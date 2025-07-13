@@ -25,154 +25,170 @@ class DataSeeder extends Seeder
         Role::insert([
             [
                 'id' => Uuid::uuid4(),
-                'name' => 'Admin',
+                'name' => 'Administrator',
             ],
             [
                 'id' => Uuid::uuid4(),
-                'name' => 'Manager',
+                'name' => 'SSO',
             ],
             [
                 'id' => Uuid::uuid4(),
-                'name' => 'Supervisor',
+                'name' => 'SO',
             ],
             [
                 'id' => Uuid::uuid4(),
-                'name' => 'Guard',
+                'name' => 'SS',
             ],
             [
                 'id' => Uuid::uuid4(),
-                'name' => 'Employee',
+                'name' => 'OE',
+            ],
+            [
+                'id' => Uuid::uuid4(),
+                'name' => 'OM',
+            ],
+            [
+                'id' => Uuid::uuid4(),
+                'name' => 'SE',
+            ],
+            [
+                'id' => Uuid::uuid4(),
+                'name' => 'Controller',
+            ],
+            [
+                'id' => Uuid::uuid4(),
+                'name' => 'HR',
             ],
         ]);
 
         $permissions = [
             [
-                'name' => 'Client',
+                'name' => 'client',
                 'category' => 'Master Settings'
             ],
             [
-                'name' => 'Add role',
+                'name' => 'add_role',
                 'category' => 'Master Settings'
             ],
             [
-                'name' => 'Edit role',
+                'name' => 'edit_role',
                 'category' => 'Master Settings'
             ],
             [
-                'name' => 'Delete role',
+                'name' => 'delete_role',
                 'category' => 'Master Settings'
             ],
             [
-                'name' => 'Add occurence catg.',
+                'name' => 'add_occurence_category',
                 'category' => 'Master Settings'
             ],
             [
-                'name' => 'Edit occurence catg.',
+                'name' => 'edit_occurence_category',
                 'category' => 'Master Settings'
             ],
             [
-                'name' => 'Add employee document',
+                'name' => 'add_employee_document',
                 'category' => 'Master Settings'
             ],
             [
-                'name' => 'Edit employee document',
+                'name' => 'edit_employee_document',
                 'category' => 'Master Settings'
             ],
             [
-                'name' => 'List SOP document',
+                'name' => 'list_sop_document',
                 'category' => 'Master Settings'
             ],
             [
-                'name' => 'Add SOP document',
+                'name' => 'add_sop_document',
                 'category' => 'Master Settings'
             ],
             [
-                'name' => 'Edit SOP document',
+                'name' => 'edit_sop_document',
                 'category' => 'Master Settings'
             ],
             [
-                'name' => 'List incident type',
+                'name' => 'list_incident_type',
                 'category' => 'Master Settings'
             ],
             [
-                'name' => 'Add incident type',
+                'name' => 'add_incident_type',
                 'category' => 'Master Settings'
             ],
             [
-                'name' => 'Edit incident type',
+                'name' => 'edit_incident_type',
                 'category' => 'Master Settings'
             ],
             [
-                'name' => 'Attendance setings',
+                'name' => 'attendance_setings_update',
                 'category' => 'Master Settings'
             ],
             [
-                'name' => 'List employees',
+                'name' => 'list_employees',
                 'category' => 'Users'
             ],
             [
-                'name' => 'Edit employees',
+                'name' => 'edit_employee',
                 'category' => 'Users'
             ],
             [
-                'name' => 'List employee attendance',
+                'name' => 'list_employee_attendances',
                 'category' => 'Attendance & incidents'
             ],
             [
-                'name' => 'List incidents',
+                'name' => 'list_incidents',
                 'category' => 'Attendance & incidents'
             ],
             [
-                'name' => 'Edit incidents',
+                'name' => 'edit_incident',
                 'category' => 'Attendance & incidents'
             ],
             [
-                'name' => 'List sites',
+                'name' => 'list_sites',
                 'category' => 'Site'
             ],
             [
-                'name' => 'Add sites',
+                'name' => 'add_site',
                 'category' => 'Site'
             ],
             [
-                'name' => 'Edit sites',
+                'name' => 'edit_site',
                 'category' => 'Site'
             ],
             [
-                'name' => 'Delete sites',
+                'name' => 'delete_site',
                 'category' => 'Site'
             ],
             [
-                'name' => 'Site map',
+                'name' => 'site_map',
                 'category' => 'Site'
             ],
             [
-                'name' => 'Site allocation',
+                'name' => 'site_allocation',
                 'category' => 'Site'
             ],
             [
-                'name' => 'Guard tour',
+                'name' => 'guard_tour',
                 'category' => 'Site'
             ],
             [
-                'name' => 'Reports',
+                'name' => 'reports',
                 'category' => 'Site'
             ],
             [
-                'name' => 'List e-Occurrence',
+                'name' => 'list_e-occurrences',
                 'category' => 'e-Occurrence'
             ],
             [
-                'name' => 'Add e-Occurrence',
+                'name' => 'add_e-occurrence',
                 'category' => 'e-Occurrence'
             ],
             [
-                'name' => 'Edit e-Occurrence',
+                'name' => 'edit_e-occurrence',
                 'category' => 'e-Occurrence'
             ],
         ];
 
-        $role = Role::where('name', 'Admin')->first();
+        $role = Role::where('name', 'Administrator')->first();
 
         foreach ($permissions as $item) {
             Permission::create([

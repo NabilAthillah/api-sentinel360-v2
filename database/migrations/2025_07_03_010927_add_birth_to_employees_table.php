@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('employees', function (Blueprint $table) {
             $table->date('birth')->nullable();
-            $table->string('briefing_conducted')->nullable();
+            $table->enum('briefing_conducted', ['yes', 'no'])->default('yes')->nullable();
             $table->date('date_joined')->nullable();
         });
     }
