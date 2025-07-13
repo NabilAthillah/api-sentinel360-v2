@@ -17,7 +17,8 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->nullable();
             $table->string('mcst_number')->nullable();
-            $table->string('ma_name')->nullable();
+            $table->string('managing_agent')->nullable();
+            $table->string('person_in_charge')->nullable();
             $table->string('mobile')->nullable();
             $table->string('pic')->nullable();
             $table->foreign('pic')->references('id')->on('users');
