@@ -60,9 +60,11 @@ class AuthController extends Controller
                 ], 401);
             }
 
-            $user->update([
-                'last_login' => Carbon::now()
-            ]);
+            if (!$user->las_login) {
+                $user->update([
+                    'last_login' => Carbon::now()
+                ]);
+            }
 
             $token = $user->createToken('auth_token')->plainTextToken;
 

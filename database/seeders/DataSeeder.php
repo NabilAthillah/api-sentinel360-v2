@@ -63,7 +63,15 @@ class DataSeeder extends Seeder
 
         $permissions = [
             [
-                'name' => 'client',
+                'name' => 'show_client',
+                'category' => 'Master Settings'
+            ],
+            [
+                'name' => 'edit_client',
+                'category' => 'Master Settings'
+            ],
+            [
+                'name' => 'list_roles',
                 'category' => 'Master Settings'
             ],
             [
@@ -83,7 +91,15 @@ class DataSeeder extends Seeder
                 'category' => 'Master Settings'
             ],
             [
+                'name' => 'list_occurrence_categories',
+                'category' => 'Master Settings'
+            ],
+            [
                 'name' => 'edit_occurence_category',
+                'category' => 'Master Settings'
+            ],
+            [
+                'name' => 'list_employee_documents',
                 'category' => 'Master Settings'
             ],
             [
@@ -95,7 +111,7 @@ class DataSeeder extends Seeder
                 'category' => 'Master Settings'
             ],
             [
-                'name' => 'list_sop_document',
+                'name' => 'list_sop_documents',
                 'category' => 'Master Settings'
             ],
             [
@@ -107,7 +123,11 @@ class DataSeeder extends Seeder
                 'category' => 'Master Settings'
             ],
             [
-                'name' => 'list_incident_type',
+                'name' => 'delete_sop_document',
+                'category' => 'Master Settings'
+            ],
+            [
+                'name' => 'list_incident_types',
                 'category' => 'Master Settings'
             ],
             [
@@ -119,7 +139,11 @@ class DataSeeder extends Seeder
                 'category' => 'Master Settings'
             ],
             [
-                'name' => 'attendance_setings_update',
+                'name' => 'show_attendance_settings',
+                'category' => 'Master Settings'
+            ],
+            [
+                'name' => 'edit_attendance_settings',
                 'category' => 'Master Settings'
             ],
             [
@@ -128,6 +152,18 @@ class DataSeeder extends Seeder
             ],
             [
                 'name' => 'edit_employee',
+                'category' => 'Users'
+            ],
+            [
+                'name' => 'add_employee',
+                'category' => 'Users'
+            ],
+            [
+                'name' => 'delete_employee',
+                'category' => 'Users'
+            ],
+            [
+                'name' => 'upload_employee_documents',
                 'category' => 'Users'
             ],
             [
@@ -148,6 +184,18 @@ class DataSeeder extends Seeder
             ],
             [
                 'name' => 'add_site',
+                'category' => 'Site'
+            ],
+            [
+                'name' => 'list_site_routes',
+                'category' => 'Site'
+            ],
+            [
+                'name' => 'add_site_route',
+                'category' => 'Site'
+            ],
+            [
+                'name' => 'edit_site_route',
                 'category' => 'Site'
             ],
             [
