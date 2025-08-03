@@ -46,6 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', 'store')->name('store');
         Route::put('/{id}', 'update')->name('update');
         Route::post('/delete/{id}', 'destroy')->name('destroy');
+        Route::put('/{id}/status', 'updateStatus')->name('updateStatus');
     });
 
     Route::controller(RoleController::class)->name('roles.')->prefix('roles')->group(function () {

@@ -17,7 +17,6 @@ class EmployeeController extends Controller
     public function index()
     {
         try {
-            //code...
             $employees = Employee::with('reporting', 'user', 'user.role')->get();
 
             return response()->json([
@@ -64,7 +63,7 @@ class EmployeeController extends Controller
                 'name' => $request->name,
                 'mobile' => $request->mobile,
                 'address' => $request->address,
-                'status' => 'active',
+                'status' => 'inactive',
                 'email' => $request->email,
                 'password' => Hash::make($request->name),
                 'id_role' => $request->id_role
@@ -103,6 +102,7 @@ class EmployeeController extends Controller
                 'a8' => $request->a8,
                 'q9' => $request->q9,
                 'a9' => $request->a9,
+                'status' => 'pending'
             ]);
 
             DB::commit();
@@ -157,7 +157,7 @@ class EmployeeController extends Controller
                 'name' => $request->name,
                 'mobile' => $request->mobile,
                 'address' => $request->address,
-                'status' => 'active',
+                'status' => 'inactive',
                 'email' => $request->email,
                 'id_role' => $request->id_role
             ]);
@@ -249,6 +249,46 @@ class EmployeeController extends Controller
             ], 500);
         }
     }
+
+   public function updateStatus(Request $request, $id)
+{
+    try {
+        $employee = Employee::with('user')->find($id);
+
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Employee not found'
+            ], 404);
+        }
+
+        $validStatuses = ['pending', 'accepted', 'rejected'];
+        if (!in_array($request->status, $validStatuses)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid status value'
+            ], 400);
+        }
+
+        $employee->update(['status' => $request->status]);
+
+        if ($request->status === 'accepted' && $employee->user) {
+            $employee->user->update(['status' => 'active']);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Employee status updated successfully',
+            'data' => $employee
+        ], 200);
+    } catch (\Throwable $th) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Oops! Something went wrong',
+            'error' => $th->getMessage()
+        ], 500);
+    }
+}
 
     public function destroy(Request $request, $id)
     {
