@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\AuditLogger;
 use App\Http\Controllers\Controller;
 use App\Models\EmployeeDocument;
 use DB;
@@ -20,22 +21,50 @@ class EmployeeDocumentController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            //code...
             DB::beginTransaction();
 
             $document = EmployeeDocument::where('id', $id)->first();
 
             if (!$document) {
+                AuditLogger::log(
+                    'Update Document Failed',
+                    "Document with ID {$id} not found.",
+                    'error',
+                    $request->user()->id ?? null
+                );
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Oops! Something went wrong'
                 ], 404);
             }
 
+            $oldData = $document->only(['name', 'status']);
+
             $document->update([
                 'name' => $request->name ?? $document->name,
                 'status' => $request->status ?? $document->status,
             ]);
+
+            $newData = $document->only(['name', 'status']);
+
+            $description = "Updated employee document (ID: {$document->id}).\n\n";
+            $description .= "Data before update:\n";
+            foreach ($oldData as $key => $value) {
+                $description .= ucfirst($key) . ": {$value}\n";
+            }
+
+            $description .= "\nData after update:\n";
+            foreach ($newData as $key => $value) {
+                $description .= ucfirst($key) . ": {$value}\n";
+            }
+
+            AuditLogger::log(
+                'Employee Document Updated',
+                $description,
+                'success',
+                $request->user()->id ?? null
+            );
 
             DB::commit();
 
@@ -43,31 +72,51 @@ class EmployeeDocumentController extends Controller
                 'success' => true,
                 'message' => 'Document updated successfully'
             ], 200);
-
         } catch (\Throwable $th) {
-            //throw $th;
+            DB::rollBack();
+
+            AuditLogger::log(
+                'Update Document Failed',
+                'Exception: ' . $th->getMessage(),
+                'error',
+                $request->user()->id ?? null
+            );
+
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Somtehing went wrong',
+                'message' => 'Oops! Something went wrong',
             ], 500);
         }
     }
-
     public function store(Request $request)
     {
         try {
             DB::beginTransaction();
 
-            $category = EmployeeDocument::create([
+            $document = EmployeeDocument::create([
                 'name' => $request->name,
             ]);
 
-            if (!$category) {
+            if (!$document) {
+                AuditLogger::log(
+                    'Create Document Failed',
+                    "Failed to create document with name {$request->name}.",
+                    'error',
+                    $request->user()->id ?? null
+                );
+
                 return response()->json([
                     'success' => false,
-                    'message' => 'Oops! Somtehing went wrong'
+                    'message' => 'Oops! Something went wrong'
                 ], 500);
             }
+
+            AuditLogger::log(
+                'Document Created',
+                "Created employee document with name: {$document->name} (ID: {$document->id})",
+                'success',
+                $request->user()->id ?? null
+            );
 
             DB::commit();
 
@@ -76,10 +125,18 @@ class EmployeeDocumentController extends Controller
                 'message' => 'Document created successfully'
             ], 200);
         } catch (\Throwable $th) {
-            //throw $th;
+            DB::rollBack();
+
+            AuditLogger::log(
+                'Create Document Failed',
+                'Exception: ' . $th->getMessage(),
+                'error',
+                $request->user()->id ?? null
+            );
+
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Somtehing went wrong'
+                'message' => 'Oops! Something went wrong'
             ], 500);
         }
     }

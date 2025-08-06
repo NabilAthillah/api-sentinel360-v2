@@ -2,27 +2,40 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\AuditLogger;
 use App\Http\Controllers\Controller;
 use App\Models\Route;
 use DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class RouteController extends Controller
 {
     public function update(Request $request, $id)
     {
         try {
-            //code...
             DB::beginTransaction();
 
-            $route = Route::where('id', $id)->first();
+            $route = Route::find($id);
 
             if (!$route) {
+                AuditLogger::log(
+                    "Failed to update route",
+                    "Route with ID $id not found",
+                    'error',
+                    Auth::id()
+                );
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Oops! Something went wrong'
                 ], 404);
             }
+
+            $before = [
+                'name' => $route->name,
+                'status' => $route->status
+            ];
 
             $route->update([
                 'name' => $request->name ?? $route->name,
@@ -31,24 +44,52 @@ class RouteController extends Controller
 
             DB::commit();
 
+            $after = [
+                'name' => $route->name,
+                'status' => $route->status
+            ];
+
+            $desc = "Data before update:\n";
+            foreach ($before as $key => $value) {
+                $desc .= ucfirst($key) . ": $value\n";
+            }
+            $desc .= "\nData after update:\n";
+            foreach ($after as $key => $value) {
+                $desc .= ucfirst($key) . ": $value\n";
+            }
+
+            AuditLogger::log(
+                "Route updated by " . (Auth::user()->email ?? 'Unknown'),
+                $desc,
+                'success',
+                Auth::id()
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Route updated successfully'
             ], 200);
-
         } catch (\Throwable $th) {
-            //throw $th;
+            DB::rollBack();
+
+            AuditLogger::log(
+                "Failed to update route",
+                "Error: {$th->getMessage()}",
+                'error',
+                Auth::id()
+            );
+
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Somtehing went wrong',
+                'message' => 'Oops! Something went wrong',
             ], 500);
         }
     }
 
+
     public function store(Request $request)
     {
         try {
-            //code...
             DB::beginTransaction();
 
             $route = Route::create([
@@ -59,53 +100,92 @@ class RouteController extends Controller
             if (!$route) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Oops! Somtehing went wrong'
+                    'message' => 'Oops! Something went wrong'
                 ], 500);
             }
 
             DB::commit();
+
+            AuditLogger::log(
+                "Route created by " . (Auth::user()->email ?? 'Unknown'),
+                "Name: {$route->name}\nSite ID: {$route->id_site}",
+                'success',
+                Auth::id()
+            );
 
             return response()->json([
                 'success' => true,
                 'message' => 'Route created successfully'
             ], 200);
         } catch (\Throwable $th) {
-            //throw $th;
+            DB::rollBack();
+
+            AuditLogger::log(
+                "Failed to create route",
+                "Error: {$th->getMessage()}",
+                'error',
+                Auth::id()
+            );
+
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Somtehing went wrong'
+                'message' => 'Oops! Something went wrong'
             ], 500);
         }
     }
 
+
     public function destroy($id)
     {
         try {
-            //code...
             DB::beginTransaction();
 
-            $route = Route::where('id', $id)->first();
+            $route = Route::find($id);
 
             if (!$route) {
+                AuditLogger::log(
+                    "Failed to delete route",
+                    "Route with ID $id not found",
+                    'error',
+                    Auth::id()
+                );
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Oops! Something went wrong'
                 ], 404);
             }
 
+            $routeInfo = "Name: {$route->name}, Site ID: {$route->id_site}";
+
             $route->delete();
 
             DB::commit();
+
+            AuditLogger::log(
+                "Route deleted by " . (Auth::user()->email ?? 'Unknown'),
+                "Deleted Route Info:\n{$routeInfo}",
+                'success',
+                Auth::id()
+            );
 
             return response()->json([
                 'success' => true,
                 'message' => 'Route deleted successfully'
             ], 200);
         } catch (\Throwable $th) {
-            //throw $th;
+            DB::rollBack();
+
+            AuditLogger::log(
+                "Failed to delete route",
+                "Error: {$th->getMessage()}",
+                'error',
+                Auth::id()
+            );
+
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Somtehing went wrong'
+                'message' => 'Oops! Something went wrong'
             ], 500);
         }
     }

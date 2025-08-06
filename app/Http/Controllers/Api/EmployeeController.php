@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\AuditLogger;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\User;
@@ -45,11 +46,18 @@ class EmployeeController extends Controller
 
         // if($user)
         try {
-            //code...
             DB::beginTransaction();
+
             $exists = User::where('email', $request->email)->first();
 
             if ($exists) {
+                AuditLogger::log(
+                    "Attempt to add duplicate employee",
+                    "Employee with email {$request->email} already exists",
+                    'error',
+                    $request->user()->id ?? null
+                );
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Employee with this email already exists'
@@ -70,6 +78,13 @@ class EmployeeController extends Controller
             ]);
 
             if (!$user) {
+                AuditLogger::log(
+                    "Failed to create user record",
+                    "Error occurred while creating user: {$request->email}",
+                    'error',
+                    $request->user()->id ?? null
+                );
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Oops! Something went wrong'
@@ -107,6 +122,37 @@ class EmployeeController extends Controller
 
             DB::commit();
 
+            AuditLogger::log(
+                "{$request->user()->email} has added a new employee",
+                "New Employee Created:\n" .
+                    "User Info:\n" .
+                    "- Name: {$request->name}\n" .
+                    "- Email: {$request->email}\n" .
+                    "- Mobile: {$request->mobile}\n" .
+                    "- Address: {$request->address}\n" .
+                    "- Role ID: {$request->id_role}\n" .
+                    "- Status: inactive\n\n" .
+                    "Employee Info:\n" .
+                    "- NRIC/FIN No: {$request->nric_fin_no}\n" .
+                    "- Birth Date: {$request->birth}\n" .
+                    "- Briefing Date: {$request->briefing_date}\n" .
+                    "- Briefing Conducted: {$request->briefing_conducted}\n" .
+                    "- Date Joined: {$request->date_joined}\n" .
+                    "- Reporting To: {$request->reporting_to}\n" .
+                    "- Q1: {$request->q1} | A1: {$request->a1}\n" .
+                    "- Q2: {$request->q2} | A2: {$request->a2}\n" .
+                    "- Q3: {$request->q3} | A3: {$request->a3}\n" .
+                    "- Q4: {$request->q4} | A4: {$request->a4}\n" .
+                    "- Q5: {$request->q5} | A5: {$request->a5}\n" .
+                    "- Q6: {$request->q6} | A6: {$request->a6}\n" .
+                    "- Q7: {$request->q7} | A7: {$request->a7}\n" .
+                    "- Q8: {$request->q8} | A8: {$request->a8}\n" .
+                    "- Q9: {$request->q9} | A9: {$request->a9}\n" .
+
+                    'success',
+                $request->user()->id ?? null
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Employee created successfully',
@@ -115,10 +161,18 @@ class EmployeeController extends Controller
                 ]
             ], 200);
         } catch (\Throwable $th) {
-            //throw $th;
+            DB::rollBack();
+
+            AuditLogger::log(
+                "Employee creation failed",
+                "Error: {$th->getMessage()}",
+                'error',
+                $request->user()->id ?? null
+            );
+
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Something went wrong' . $th->getMessage(),
+                'message' => 'Oops! Something went wrong. ' . $th->getMessage(),
             ], 500);
         }
     }
@@ -129,6 +183,13 @@ class EmployeeController extends Controller
 
             $employee = Employee::where('id', $id)->first();
             if (!$employee) {
+                AuditLogger::log(
+                    "Failed to update employee",
+                    "Employee with ID $id not found",
+                    'error',
+                    $request->user()->id ?? null
+                );
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Employee not found'
@@ -137,22 +198,37 @@ class EmployeeController extends Controller
 
             $user = User::where('id', $employee->id_user)->first();
             if (!$user) {
+                AuditLogger::log(
+                    "Failed to update employee",
+                    "Related user not found for employee ID $id",
+                    'error',
+                    $request->user()->id ?? null
+                );
+
                 return response()->json([
                     'success' => false,
                     'message' => 'User not found'
                 ], 404);
             }
 
-            // Check email conflict
             $existingUser = User::where('email', $request->email)->where('id', '!=', $user->id)->first();
             if ($existingUser) {
+                AuditLogger::log(
+                    "Email conflict on employee update",
+                    "Attempted to update to existing email: {$request->email}",
+                    'error',
+                    $request->user()->id ?? null
+                );
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Employee with this email already exists'
                 ], 409);
             }
 
-            // Update user basic info
+            $originalUser = $user->replicate();
+            $originalEmployee = $employee->replicate();
+
             $user->update([
                 'name' => $request->name,
                 'mobile' => $request->mobile,
@@ -162,9 +238,7 @@ class EmployeeController extends Controller
                 'id_role' => $request->id_role
             ]);
 
-            // ✅ Handle profile image base64
             if ($request->profile) {
-                // Hapus gambar lama
                 if ($user->profile_image && Storage::disk('public')->exists($user->profile_image)) {
                     Storage::disk('public')->delete($user->profile_image);
                 }
@@ -172,10 +246,9 @@ class EmployeeController extends Controller
                 $image = $request->profile;
 
                 if (preg_match('/^data:image\/(\w+);base64,/', $image, $type)) {
-                    $image = substr($image, strpos($image, ',') + 1); // Buang header
-                    $type = strtolower($type[1]); // jpg, png, etc.
+                    $image = substr($image, strpos($image, ',') + 1);
+                    $type = strtolower($type[1]);
 
-                    // Validasi ekstensi
                     if (!in_array($type, ['jpg', 'jpeg', 'png', 'gif'])) {
                         return response()->json([
                             'success' => false,
@@ -206,7 +279,7 @@ class EmployeeController extends Controller
                 }
             }
 
-            // Update employee fields
+            // ✅ Lakukan update pada Employee
             $employee->update([
                 'nric_fin_no' => $request->nric_fin_no,
                 'briefing_date' => $request->briefing_date,
@@ -236,12 +309,72 @@ class EmployeeController extends Controller
 
             DB::commit();
 
+            $description = "{$request->user()->email} updated employee {$originalUser->email}\n\n";
+            $description .= "Data before updated:\n";
+            $description .= "Name: {$originalUser->name}\n";
+            $description .= "Email: {$originalUser->email}\n";
+            $description .= "Mobile: {$originalUser->mobile}\n";
+            $description .= "Address: {$originalUser->address}\n";
+            $description .= "Role ID: {$originalUser->id_role}\n\n";
+            $description .= "NRIC/FIN No: {$request->nric_fin_no}\n";
+            $description .= "Birth Date: {$request->birth}\n";
+            $description .= "Briefing Date: {$request->briefing_date}\n";
+            $description .= "Briefing Conducted: {$request->briefing_conducted}\n";
+            $description .= "Date Joined: {$request->date_joined}\n";
+            $description .= "Reporting To: {$request->reporting_to}\n";
+            $description .= "Q1: {$request->q1} | A1: {$request->a1}\n";
+            $description .= "Q2: {$request->q2} | A2: {$request->a2}\n";
+            $description .= "Q3: {$request->q3} | A3: {$request->a3}\n";
+            $description .= "Q4: {$request->q4} | A4: {$request->a4}\n";
+            $description .= "Q5: {$request->q5} | A5: {$request->a5}\n";
+            $description .= "Q6: {$request->q6} | A6: {$request->a6}\n";
+            $description .= "Q7: {$request->q7} | A7: {$request->a7}\n";
+            $description .= "Q8: {$request->q8} | A8: {$request->a8}\n";
+            $description .= "Q9: {$request->q9} | A9: {$request->a9}\n";
+
+            $description .= "Data after updated:\n";
+            $description .= "Name: {$user->name}\n";
+            $description .= "Email: {$user->email}\n";
+            $description .= "Mobile: {$user->mobile}\n";
+            $description .= "Address: {$user->address}\n";
+            $description .= "Role ID: {$user->id_role}\n";
+            $description .= "NRIC/FIN No: {$request->nric_fin_no}\n";
+            $description .= "Birth Date: {$request->birth}\n";
+            $description .= "Briefing Date: {$request->briefing_date}\n";
+            $description .= "Briefing Conducted: {$request->briefing_conducted}\n";
+            $description .= "Date Joined: {$request->date_joined}\n";
+            $description .= "Reporting To: {$request->reporting_to}\n";
+            $description .= "Q1: {$request->q1} | A1: {$request->a1}\n";
+            $description .= "Q2: {$request->q2} | A2: {$request->a2}\n";
+            $description .= "Q3: {$request->q3} | A3: {$request->a3}\n";
+            $description .= "Q4: {$request->q4} | A4: {$request->a4}\n";
+            $description .= "Q5: {$request->q5} | A5: {$request->a5}\n";
+            $description .= "Q6: {$request->q6} | A6: {$request->a6}\n";
+            $description .= "Q7: {$request->q7} | A7: {$request->a7}\n";
+            $description .= "Q8: {$request->q8} | A8: {$request->a8}\n";
+            $description .= "Q9: {$request->q9} | A9: {$request->a9}\n";
+
+            AuditLogger::log(
+                "{$request->user()->email} updated employee {$user->name}",
+                $description,
+                'success',
+                $request->user()->id ?? null
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Employee updated successfully'
             ], 200);
         } catch (\Throwable $th) {
             DB::rollBack();
+
+            AuditLogger::log(
+                "Failed to update employee",
+                "Error: {$th->getMessage()}",
+                'error',
+                $request->user()->id ?? null
+            );
+
             return response()->json([
                 'success' => false,
                 'message' => 'Oops! Something went wrong',
@@ -250,73 +383,138 @@ class EmployeeController extends Controller
         }
     }
 
-   public function updateStatus(Request $request, $id)
-{
-    try {
-        $employee = Employee::with('user')->find($id);
 
-        if (!$employee) {
+    public function updateStatus(Request $request, $id)
+    {
+        DB::beginTransaction();
+
+        try {
+            $employee = Employee::with('user')->find($id);
+
+            if (!$employee) {
+                AuditLogger::log(
+                    "Failed to update employee status",
+                    "Employee with ID $id not found",
+                    'error',
+                    $request->user()->id ?? null
+                );
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Employee not found'
+                ], 404);
+            }
+
+            $validStatuses = ['pending', 'accepted', 'rejected'];
+            if (!in_array($request->status, $validStatuses)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid status value'
+                ], 400);
+            }
+
+            $oldStatus = $employee->status;
+
+            if ($request->status === 'rejected') {
+                $employeeName = $employee->user->name ?? 'Unknown';
+
+                $employee->delete();
+                if ($employee->user) {
+                    $employee->user->delete();
+                }
+
+                DB::commit();
+
+                AuditLogger::log(
+                    "Employee Rejected and Deleted",
+                    "{$request->user()->email} rejected and deleted employee: {$employeeName}",
+                    'warning',
+                    $request->user()->id ?? null
+                );
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Employee rejected and deleted successfully'
+                ], 200);
+            }
+
+            // Update status for 'pending' or 'accepted'
+            $employee->update(['status' => $request->status]);
+
+            if ($request->status === 'accepted' && $employee->user) {
+                $employee->user->update(['status' => 'active']);
+            }
+
+            DB::commit();
+
+            AuditLogger::log(
+                "Employee Status Updated",
+                "{$request->user()->email} updated employee ID {$employee->id} status from {$oldStatus} to {$request->status}",
+                'info',
+                $request->user()->id ?? null
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Employee status updated successfully',
+                'data' => $employee
+            ], 200);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            AuditLogger::log(
+                "Failed to update employee status",
+                "Error: {$th->getMessage()}",
+                'error',
+                $request->user()->id ?? null
+            );
+
             return response()->json([
                 'success' => false,
-                'message' => 'Employee not found'
-            ], 404);
+                'message' => 'Oops! Something went wrong',
+                'error' => $th->getMessage()
+            ], 500);
         }
-
-        $validStatuses = ['pending', 'accepted', 'rejected'];
-        if (!in_array($request->status, $validStatuses)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid status value'
-            ], 400);
-        }
-
-        $employee->update(['status' => $request->status]);
-
-        if ($request->status === 'accepted' && $employee->user) {
-            $employee->user->update(['status' => 'active']);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Employee status updated successfully',
-            'data' => $employee
-        ], 200);
-    } catch (\Throwable $th) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Oops! Something went wrong',
-            'error' => $th->getMessage()
-        ], 500);
     }
-}
-
     public function destroy(Request $request, $id)
     {
         try {
             DB::beginTransaction();
 
-            $employee = Employee::where('id', $id)->first();
+            $employee = Employee::with('user')->find($id);
 
             if (!$employee) {
+                AuditLogger::log(
+                    "Failed to delete employee",
+                    "Employee with ID $id not found",
+                    'error',
+                    $request->user()->id ?? null
+                );
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Employee not found'
-                ], 401);
+                ], 404);
             }
 
-            $user = User::where('id', $employee->id_user)->first();
+            $user = $employee->user;
 
-            if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Employee not found'
-                ], 401);
-            }
+            $employeeName = $user->name ?? 'Unknown';
+            $employeeEmail = $user->email ?? 'Unknown';
 
             $employee->delete();
-            $user->delete();
+            if ($user) {
+                $user->delete();
+            }
 
             DB::commit();
+
+            AuditLogger::log(
+                "Employee Deleted",
+                "{$request->user()->email} deleted employee: {$employeeName} ({$employeeEmail})",
+                'warning',
+                $request->user()->id ?? null
+            );
 
             return response()->json([
                 'success' => true,
@@ -326,10 +524,19 @@ class EmployeeController extends Controller
                 ]
             ], 200);
         } catch (\Throwable $th) {
-            //throw $th;
+            DB::rollBack();
+
+            AuditLogger::log(
+                "Failed to delete employee",
+                "Error: {$th->getMessage()}",
+                'error',
+                $request->user()->id ?? null
+            );
+
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Something went wrong'
+                'message' => 'Oops! Something went wrong',
+                'error' => $th->getMessage()
             ], 500);
         }
     }

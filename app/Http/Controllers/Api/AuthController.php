@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\AuditLogger;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Auth;
@@ -13,6 +14,7 @@ use Storage;
 
 class AuthController extends Controller
 {
+
     public function login(Request $request)
     {
         try {
@@ -24,22 +26,45 @@ class AuthController extends Controller
             ]);
 
             if (!$request->email || !$request->password) {
+                AuditLogger::log(
+                    'Login Failed',
+                    'Login attempt with missing email or password.',
+                    'error',
+                    null
+                );
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Email and password are required'
                 ], 401);
             }
 
-            $user = User::with('role', 'role.permissions', 'employee')->where('email', $request->email)->first();
+            $user = User::with('role', 'role.permissions', 'employee')
+                ->where('email', $request->email)
+                ->first();
 
             if (!$user) {
+                AuditLogger::log(
+                    'Login Failed',
+                    "Login attempt with invalid email: {$request->email}",
+                    'error',
+                    null
+                );
+
                 return response()->json([
                     'success' => false,
-                    'message' => 'Invalid emai'
+                    'message' => 'Invalid email'
                 ], 401);
             }
 
             if (!Hash::check($request->password, $user->password)) {
+                AuditLogger::log(
+                    'Login Failed',
+                    "Invalid password attempt for email: {$request->email}",
+                    'error',
+                    $user->id
+                );
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid password'
@@ -47,6 +72,13 @@ class AuthController extends Controller
             }
 
             if (!Auth::attempt($request->only('email', 'password'))) {
+                AuditLogger::log(
+                    'Login Failed',
+                    "Laravel auth attempt failed for email: {$request->email}",
+                    'error',
+                    $user->id
+                );
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Oops! Something went wrong'
@@ -54,13 +86,20 @@ class AuthController extends Controller
             }
 
             if ($user->status != 'active') {
+                AuditLogger::log(
+                    'Login Blocked',
+                    "Inactive user attempted login: {$user->email}",
+                    'warning',
+                    $user->id
+                );
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Your account is not active. Please contact administrator'
                 ], 401);
             }
 
-            if (!$user->las_login) {
+            if (!$user->last_login) {
                 $user->update([
                     'last_login' => Carbon::now()
                 ]);
@@ -68,11 +107,18 @@ class AuthController extends Controller
 
             $token = $user->createToken('auth_token')->plainTextToken;
 
+            AuditLogger::log(
+                'Login Successful',
+                "User {$user->email} logged in successfully.",
+                'success',
+                $user->id
+            );
+
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Login successfull',
+                'message' => 'Login successful',
                 'data' => [
                     'user' => $user,
                     'token' => $token
@@ -95,17 +141,26 @@ class AuthController extends Controller
             $user = User::with('role', 'role.permissions', 'employee')->where('id', $request->id)->first();
 
             if (!$user) {
+                AuditLogger::log(
+                    'Update Profile Failed',
+                    "User with ID {$request->id} not found.",
+                    'error',
+                    $request->id
+                );
+
                 return response()->json([
                     'success' => false,
                     'message' => 'User not found'
                 ], 401);
             }
 
+            $oldData = $user->only(['name', 'email', 'address', 'mobile', 'profile_image']);
+
             $pathImage = '';
 
             if ($request->profile) {
-                if ($user->profile) {
-                    Storage::delete($user->profile);
+                if ($user->profile_image) {
+                    Storage::delete($user->profile_image);
                 }
 
                 $image = $request->profile;
@@ -123,6 +178,13 @@ class AuthController extends Controller
                 $exists = User::where('email', $request->email)->first();
 
                 if ($exists) {
+                    AuditLogger::log(
+                        'Update Profile Failed',
+                        "Email {$request->email} is already used by another account.",
+                        'error',
+                        $user->id
+                    );
+
                     return response()->json([
                         'success' => false,
                         'message' => 'Employee with this email already exists'
@@ -141,6 +203,13 @@ class AuthController extends Controller
                 $valid = Hash::check($request->old_password, $user->password);
 
                 if (!$valid) {
+                    AuditLogger::log(
+                        'Update Password Failed',
+                        "Invalid old password provided by user {$user->email}.",
+                        'error',
+                        $user->id
+                    );
+
                     return response()->json([
                         'success' => false,
                         'message' => 'Invalid old password'
@@ -152,6 +221,27 @@ class AuthController extends Controller
                 ]);
             }
 
+            $newData = $user->only(['name', 'email', 'address', 'mobile', 'profile_image']);
+
+            // Build log description
+            $description = "User {$user->email} updated their profile.\n\n";
+            $description .= "Data before update:\n";
+            foreach ($oldData as $key => $value) {
+                $description .= ucfirst($key) . ": {$value}\n";
+            }
+
+            $description .= "\nData after update:\n";
+            foreach ($newData as $key => $value) {
+                $description .= ucfirst($key) . ": {$value}\n";
+            }
+
+            AuditLogger::log(
+                'Profile Updated',
+                $description,
+                'success',
+                $user->id
+            );
+
             DB::commit();
 
             return response()->json([
@@ -162,7 +252,15 @@ class AuthController extends Controller
                 ]
             ], 200);
         } catch (\Throwable $th) {
-            //throw $th;
+            DB::rollBack();
+
+            AuditLogger::log(
+                'Update Profile Failed',
+                'Exception: ' . $th->getMessage(),
+                'error',
+                $request->id
+            );
+
             return response()->json([
                 'success' => false,
                 'message' => 'Oops! Something went wrong'

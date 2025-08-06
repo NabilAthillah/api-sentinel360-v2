@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\RouteController;
 use App\Http\Controllers\Api\SiteController;
 use App\Http\Controllers\Api\SiteUserController;
 use App\Http\Controllers\Api\SOPDocumentController;
+use App\Http\Controllers\Api\AuditTrailsController;
 use App\Models\AttendanceSetting;
 use App\Models\SOPDocument;
 use Illuminate\Http\Request;
@@ -138,5 +139,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', 'store')->name('store');
         Route::put('/{id}', 'update')->name('update');
         Route::delete('/{id}', 'destroy')->name('destroy');
+    });
+    
+    Route::controller(AuditTrailsController::class)->name('audit-trails.')->prefix('audit-trails')->group(function () {
+        Route::get('/', 'index')->name('index');
     });
 });

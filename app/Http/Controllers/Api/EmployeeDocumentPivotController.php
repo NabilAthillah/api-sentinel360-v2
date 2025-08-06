@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\AuditLogger;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\EmployeeDocument;
@@ -18,7 +19,7 @@ class EmployeeDocumentPivotController extends Controller
         $data = EmployeeDocumentPivot::where('id_employee', $id)->get();
 
         $data->transform(function ($item) {
-            $item->url = asset('storage/' . $item->path); 
+            $item->url = asset('storage/' . $item->path);
             return $item;
         });
 
@@ -35,6 +36,13 @@ class EmployeeDocumentPivotController extends Controller
 
             $employee = Employee::find($request->id_employee);
             if (!$employee) {
+                AuditLogger::log(
+                    'Upload Document Failed',
+                    "Employee with ID {$request->id_employee} not found.",
+                    'error',
+                    $request->user()->id ?? null
+                );
+
                 return response()->json([
                     'success' => false,
                     'message' => "Employee not found"
@@ -43,6 +51,13 @@ class EmployeeDocumentPivotController extends Controller
 
             $document = EmployeeDocument::find($request->id_document);
             if (!$document) {
+                AuditLogger::log(
+                    'Upload Document Failed',
+                    "Document type with ID {$request->id_document} not found.",
+                    'error',
+                    $request->user()->id ?? null
+                );
+
                 return response()->json([
                     'success' => false,
                     'message' => "Document type not found"
@@ -50,6 +65,13 @@ class EmployeeDocumentPivotController extends Controller
             }
 
             if (!$request->document || !preg_match('/^data:(.*);base64,/', $request->document, $matches)) {
+                AuditLogger::log(
+                    'Upload Document Failed',
+                    "Invalid document format uploaded for Employee: {$employee->name}",
+                    'error',
+                    $request->user()->id ?? null
+                );
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid document format'
@@ -58,17 +80,20 @@ class EmployeeDocumentPivotController extends Controller
 
             $mimeType = $matches[1];
             $extension = explode('/', $mimeType)[1] ?? 'bin';
+            $base64Data = preg_replace('/^data:.*;base64,/', '', $request->document);
+            $fileData = base64_decode($base64Data);
 
             if ($fileData === false || base64_encode($fileData) !== $base64Data) {
+                AuditLogger::log(
+                    'Upload Document Failed',
+                    "Invalid or corrupted base64 data for Employee: {$employee->name}",
+                    'error',
+                    $request->user()->id ?? null
+                );
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid or corrupted base64 data.'
-                ], 422);
-            }
-            if ($fileData === false) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to decode base64 file'
                 ], 422);
             }
 
@@ -85,8 +110,6 @@ class EmployeeDocumentPivotController extends Controller
                 Storage::disk('public')->delete($existing->path);
                 $existing->delete();
             }
-
-            // Simpan pivot dokumen
             EmployeeDocumentPivot::create([
                 'id_employee' => $employee->id,
                 'id_document' => $document->id,
@@ -95,12 +118,27 @@ class EmployeeDocumentPivotController extends Controller
 
             DB::commit();
 
+            AuditLogger::log(
+                'Employee Document Uploaded',
+                "Document '{$document->name}' uploaded for Employee: {$employee->name} (ID: {$employee->id})\nPath: {$storagePath}",
+                'success',
+                $request->user()->id ?? null
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Document uploaded successfully'
             ]);
         } catch (\Throwable $th) {
             DB::rollBack();
+
+            AuditLogger::log(
+                'Upload Document Failed',
+                'Exception: ' . $th->getMessage(),
+                'error',
+                $request->user()->id ?? null
+            );
+
             return response()->json([
                 'success' => false,
                 'message' => 'Oops! Something went wrong',

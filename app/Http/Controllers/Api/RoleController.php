@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\AuditLogger;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\RolePermission;
 use DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class RoleController extends Controller
 {
@@ -32,7 +34,6 @@ class RoleController extends Controller
     public function store(Request $request)
     {
         try {
-            //code...
             DB::beginTransaction();
 
             $role = Role::create([
@@ -47,6 +48,17 @@ class RoleController extends Controller
             }
 
             DB::commit();
+            $userEmail = Auth::user()->email ?? 'Unknown';
+            $userId = Auth::id();
+
+            $permissionsList = implode(', ', $request->permissions);
+
+            AuditLogger::log(
+                "Role '{$role->name}' created by {$userEmail}",
+                "Role name: {$role->name}\nPermissions: {$permissionsList}",
+                'success',
+                $userId
+            );
 
             return response()->json([
                 'success' => true,
@@ -54,7 +66,15 @@ class RoleController extends Controller
                 'data' => $role
             ], 200);
         } catch (\Throwable $th) {
-            //throw $th;
+            DB::rollBack();
+
+            AuditLogger::log(
+                "Failed to create role",
+                "Error: {$th->getMessage()}",
+                'error',
+                Auth::id()
+            );
+
             return response()->json([
                 'success' => false,
                 'message' => 'Oops! Something went wrong'
@@ -62,20 +82,30 @@ class RoleController extends Controller
         }
     }
 
+
     public function update(Request $request, $id)
     {
         try {
-            //code...
             DB::beginTransaction();
 
-            $role = Role::where('id', $id)->first();
+            $role = Role::find($id);
 
             if (!$role) {
+                AuditLogger::log(
+                    "Failed to update role",
+                    "Role with ID $id not found",
+                    'error',
+                    Auth::id()
+                );
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Role not found'
-                ], 401);
+                ], 404);
             }
+
+            $oldName = $role->name;
+            $oldPermissions = RolePermission::where('id_role', $role->id)->pluck('id_permission')->toArray();
 
             $role->update([
                 'name' => $request->name
@@ -83,22 +113,51 @@ class RoleController extends Controller
 
             RolePermission::where('id_role', $role->id)->delete();
 
+            $newPermissions = [];
             foreach ($request->permissions as $item) {
+                $permissionId = is_array($item) ? $item['id'] : $item;
                 RolePermission::create([
                     'id_role' => $role->id,
-                    'id_permission' => $item['id']
+                    'id_permission' => $permissionId
                 ]);
+                $newPermissions[] = $permissionId;
             }
 
             DB::commit();
 
+            $userEmail = Auth::user()->email ?? 'Unknown';
+            $userId = Auth::id();
+
+            $logDescription = "Data before update:\n";
+            $logDescription .= "Name: {$oldName}\n";
+            $logDescription .= "Permissions: " . implode(', ', $oldPermissions) . "\n\n";
+
+            $logDescription .= "Data after update:\n";
+            $logDescription .= "Name: {$request->name}\n";
+            $logDescription .= "Permissions: " . implode(', ', $newPermissions) . "\n";
+
+            AuditLogger::log(
+                "Role '{$oldName}' updated by {$userEmail}",
+                $logDescription,
+                'success',
+                $userId
+            );
+
             return response()->json([
                 'success' => true,
-                'message' => 'Role created successfully',
+                'message' => 'Role updated successfully',
                 'data' => $role
             ], 200);
         } catch (\Throwable $th) {
-            //throw $th;
+            DB::rollBack();
+
+            AuditLogger::log(
+                "Failed to update role",
+                "Error: {$th->getMessage()}",
+                'error',
+                Auth::id()
+            );
+
             return response()->json([
                 'success' => false,
                 'message' => 'Oops! Something went wrong'

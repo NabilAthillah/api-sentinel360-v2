@@ -11,7 +11,6 @@ class PermissionController extends Controller
     public function index()
     {
         try {
-            //code...
             $permissions = Permission::all()->groupBy('category');
 
             return response()->json([

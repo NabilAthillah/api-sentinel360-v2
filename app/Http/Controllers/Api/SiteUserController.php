@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\AuditLogger;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\Site;
@@ -10,6 +11,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class SiteUserController extends Controller
 {
@@ -98,6 +100,8 @@ class SiteUserController extends Controller
             $shiftType = $request->shiftType;
             $dateInput = $request->date;
 
+            $allocatedDates = [];
+
             if ($allocationType === 'bydate') {
                 SiteUser::create([
                     'id_employee' => $employee->id,
@@ -105,6 +109,8 @@ class SiteUserController extends Controller
                     'shift' => $shiftType,
                     'date' => $dateInput,
                 ]);
+
+                $allocatedDates[] = $dateInput;
             } elseif ($allocationType === 'bymonth') {
                 $startOfMonth = Carbon::createFromFormat('Y-m', $dateInput)->startOfMonth();
                 $endOfMonth = $startOfMonth->copy()->endOfMonth();
@@ -123,6 +129,7 @@ class SiteUserController extends Controller
                         'shift' => $shiftType,
                         'date' => $date->toDateString(),
                     ]);
+                    $allocatedDates[] = $date->toDateString();
                 }
             } else {
                 return response()->json([
@@ -133,12 +140,33 @@ class SiteUserController extends Controller
 
             DB::commit();
 
+            // Logging
+            AuditLogger::log(
+                (Auth::user()->email ?? 'Unknown') . " allocated employee {$employee->name} to site {$site->name}",
+                json_encode([
+                    'Site' => $site->name,
+                    'Employee' => $employee->name,
+                    'Shift' => $shiftType,
+                    'Type' => $allocationType,
+                    'Dates' => $allocatedDates,
+                ], JSON_PRETTY_PRINT),
+                'success',
+                Auth::id()
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Site allocated successfully'
             ]);
         } catch (\Throwable $th) {
             DB::rollBack();
+
+            AuditLogger::log(
+                'Allocation Failed',
+                "Error: " . $th->getMessage(),
+                'error',
+                Auth::id()
+            );
 
             return response()->json([
                 'success' => false,
@@ -164,15 +192,19 @@ class SiteUserController extends Controller
             $allocationType = $request->allocationType;
             $shiftType = $request->shiftType;
             $dateInput = $request->date;
+            $siteId = $request->siteId;
+            $disallocatedDates = [];
 
             if ($allocationType === 'bydate') {
                 $date = Carbon::createFromFormat('Y-m-d', $dateInput);
 
-                SiteUser::where('id_site', $request->siteId)
+                SiteUser::where('id_site', $siteId)
                     ->where('id_employee', $employee->id)
                     ->where('shift', $shiftType)
                     ->whereDate('date', $date)
                     ->delete();
+
+                $disallocatedDates[] = $date->toDateString();
             } elseif ($allocationType === 'bymonth') {
                 try {
                     $date = strlen($dateInput) === 10
@@ -182,11 +214,20 @@ class SiteUserController extends Controller
                     $startOfMonth = $date->copy()->startOfMonth();
                     $endOfMonth = $date->copy()->endOfMonth();
 
-                    SiteUser::where('id_site', $request->siteId)
+                    $datesToDelete = SiteUser::where('id_site', $siteId)
+                        ->where('id_employee', $employee->id)
+                        ->where('shift', $shiftType)
+                        ->whereBetween('date', [$startOfMonth, $endOfMonth])
+                        ->pluck('date')
+                        ->toArray();
+
+                    SiteUser::where('id_site', $siteId)
                         ->where('id_employee', $employee->id)
                         ->where('shift', $shiftType)
                         ->whereBetween('date', [$startOfMonth, $endOfMonth])
                         ->delete();
+
+                    $disallocatedDates = array_map(fn($d) => Carbon::parse($d)->toDateString(), $datesToDelete);
                 } catch (\Exception $e) {
                     return response()->json([
                         'success' => false,
@@ -202,12 +243,33 @@ class SiteUserController extends Controller
 
             DB::commit();
 
+            // Logging
+            AuditLogger::log(
+                (Auth::user()->email ?? 'Unknown') . " disallocated employee {$employee->name} from site {$siteId}",
+                json_encode([
+                    'Site ID' => $siteId,
+                    'Employee' => $employee->name,
+                    'Shift' => $shiftType,
+                    'Type' => $allocationType,
+                    'Dates Removed' => $disallocatedDates,
+                ], JSON_PRETTY_PRINT),
+                'success',
+                Auth::id()
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Site disallocated successfully'
             ]);
         } catch (\Throwable $th) {
             DB::rollBack();
+
+            AuditLogger::log(
+                'Disallocation Failed',
+                "Error: " . $th->getMessage(),
+                'error',
+                Auth::id()
+            );
 
             return response()->json([
                 'success' => false,

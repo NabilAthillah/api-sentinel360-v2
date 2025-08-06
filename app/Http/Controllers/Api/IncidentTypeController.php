@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\AuditLogger;
 use App\Http\Controllers\Controller;
 use App\Models\IncidentType;
 use DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class IncidentTypeController extends Controller
 {
@@ -20,17 +22,25 @@ class IncidentTypeController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            //code...
             DB::beginTransaction();
 
-            $type = IncidentType::where('id', $id)->first();
+            $type = IncidentType::find($id);
 
             if (!$type) {
+                AuditLogger::log(
+                    "Failed to update incident type",
+                    "Type with ID $id not found",
+                    'error',
+                    Auth::id()
+                );
+
                 return response()->json([
                     'success' => false,
-                    'message' => 'Oops! Something went wrong'
+                    'message' => 'Type not found'
                 ], 404);
             }
+
+            $oldData = $type->toArray();
 
             $type->update([
                 'name' => $request->name ?? $type->name,
@@ -39,24 +49,49 @@ class IncidentTypeController extends Controller
 
             DB::commit();
 
+            $newData = $type->toArray();
+            $description = "Updated Incident Type (ID: $id)\n";
+            $description .= "Before:\n";
+            foreach ($oldData as $key => $value) {
+                $description .= ucfirst($key) . ": " . $value . "\n";
+            }
+            $description .= "After:\n";
+            foreach ($newData as $key => $value) {
+                $description .= ucfirst($key) . ": " . $value . "\n";
+            }
+
+            AuditLogger::log(
+                "Incident type updated by " . (Auth::user()->email ?? 'Unknown'),
+                $description,
+                'success',
+                Auth::id()
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Type updated successfully'
             ], 200);
-
         } catch (\Throwable $th) {
-            //throw $th;
+            DB::rollBack();
+
+            AuditLogger::log(
+                "Exception while updating incident type",
+                "Error: {$th->getMessage()}",
+                'error',
+                Auth::id()
+            );
+
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Somtehing went wrong',
+                'message' => 'Oops! Something went wrong'
             ], 500);
         }
     }
 
+
     public function store(Request $request)
     {
         try {
-            //code...
             DB::beginTransaction();
 
             $type = IncidentType::create([
@@ -64,23 +99,45 @@ class IncidentTypeController extends Controller
             ]);
 
             if (!$type) {
+                AuditLogger::log(
+                    "Failed to create incident type",
+                    "Attempted with name: {$request->name}",
+                    'error',
+                    Auth::id()
+                );
+
                 return response()->json([
                     'success' => false,
-                    'message' => 'Oops! Somtehing went wrong'
+                    'message' => 'Oops! Something went wrong'
                 ], 500);
             }
 
             DB::commit();
+
+            AuditLogger::log(
+                "Incident type created by " . (Auth::user()->email ?? 'Unknown'),
+                "Type created with ID: {$type->id}, Name: {$type->name}",
+                'success',
+                Auth::id()
+            );
 
             return response()->json([
                 'success' => true,
                 'message' => 'Type created successfully'
             ], 200);
         } catch (\Throwable $th) {
-            //throw $th;
+            DB::rollBack();
+
+            AuditLogger::log(
+                "Exception while creating incident type",
+                "Error: {$th->getMessage()}",
+                'error',
+                Auth::id()
+            );
+
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Somtehing went wrong'
+                'message' => 'Oops! Something went wrong'
             ], 500);
         }
     }
