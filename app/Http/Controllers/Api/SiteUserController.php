@@ -277,4 +277,17 @@ class SiteUserController extends Controller
             ], 500);
         }
     }
+
+    public function nearest($id)
+    {
+        $data = SiteUser::where('id_employee', $id)
+            ->whereDate('date', '>=', Carbon::today())
+            ->orderBy('date', 'asc')
+            ->first();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
+    }
 }

@@ -107,6 +107,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/disallocation', 'disallocation')->name('disallocation');
         Route::put('/{id}', 'update')->name('update');
         Route::put('/allocation/{id}', 'allocation')->name('allocation');
+
+        Route::get('/user/nearest/{id}', 'nearest')->name('nearest')->withoutMiddleware('auth:sanctum');
     });
 
     Route::controller(EmployeeDocumentController::class)->name('employee-documents.')->prefix('employee-documents')->group(function () {
