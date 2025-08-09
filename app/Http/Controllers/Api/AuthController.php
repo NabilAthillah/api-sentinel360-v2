@@ -147,6 +147,126 @@ class AuthController extends Controller
         }
     }
 
+    public function loginUser(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $request->validate([
+                'phone' => ['required', 'string'],
+                'password' => ['required']
+            ]);
+
+            if (!$request->phone || !$request->password) {
+                AuditLogger::log(
+                    'Login Failed',
+                    'Login attempt with missing phone or password.',
+                    'error',
+                    null,
+                    'login'
+                );
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Phone and password are required'
+                ], 401);
+            }
+
+
+            $user = User::with('role', 'role.permissions', 'employee')
+                ->where('mobile', $request->phone)
+                ->first();
+
+            if (!$user) {
+                AuditLogger::log(
+                    'Login Failed',
+                    "Login attempt with invalid phone: {$request->phone}",
+                    'error',
+                    null,
+                    'login'
+                );
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid phone'
+                ], 401);
+            }
+
+            if (!Hash::check($request->password, $user->password)) {
+                AuditLogger::log(
+                    'Login Failed',
+                    "Invalid password attempt for phone: {$request->phone}",
+                    'error',
+                    $user->id,
+                    'login'
+                );
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid password'
+                ], 401);
+            }
+
+            if ($user->status != 'active') {
+                AuditLogger::log(
+                    'Login Blocked',
+                    "Inactive user attempted login: {$user->email}",
+                    'warning',
+                    $user->id,
+                    'login'
+                );
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Your account is not active. Please contact administrator'
+                ], 403);
+            }
+
+            Auth::login($user);
+
+            if (!$user->last_login) {
+                $user->update([
+                    'last_login' => Carbon::now()
+                ]);
+            }
+
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            AuditLogger::log(
+                'Login Successful',
+                "User {$user->email} logged in successfully.",
+                'success',
+                $user->id,
+                'login'
+            );
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Login successful',
+                'data' => [
+                    'user' => $user,
+                    'token' => $token
+                ]
+            ], 200);
+        } catch (\Throwable $th) {
+            //throw $th;
+            AuditLogger::log(
+                'Login Failed',
+                "User attempted login: {$request->phone}",
+                'warning',
+                null,
+                'login'
+            );
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Oops! Something went wrong' . $th->getMessage()
+            ], 500);
+        }
+    }
+
     public function updateProfile(Request $request)
     {
         try {

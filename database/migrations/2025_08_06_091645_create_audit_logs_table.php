@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('audit_logs', function (Blueprint $table) {
         $table->uuid('id')->primary(); 
-        $table->foreignUuid('user_id')->constrained()->onDelete('cascade');
+        $table->foreignUuid('user_id')->nullable()->constrained()->onDelete('cascade');
         $table->string('title');
         $table->text('description')->nullable();
         $table->string('status')->default('info');

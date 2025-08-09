@@ -64,6 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(AuthController::class)->name('auth.')->prefix('auth')->group(function () {
         Route::post('/login', 'login')->name('login')->withoutMiddleware('auth:sanctum');
         Route::post('/update-profile', 'updateProfile')->name('updateProfile');
+        Route::post('/user/login', 'loginUser')->name('user.login')->withoutMiddleware('auth:sanctum');
     });
 
     Route::controller(AttendanceSettingController::class)->name('attendance-settings.')->prefix('attendance-settings')->group(function () {
