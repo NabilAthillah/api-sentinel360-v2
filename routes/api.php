@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\SiteController;
 use App\Http\Controllers\Api\SiteUserController;
 use App\Http\Controllers\Api\SOPDocumentController;
 use App\Http\Controllers\Api\AuditTrailsController;
+use App\Http\Controllers\Api\AttendanceController;
 use App\Models\AttendanceSetting;
 use App\Models\SOPDocument;
 use Illuminate\Http\Request;
@@ -142,8 +143,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}', 'update')->name('update');
         Route::delete('/{id}', 'destroy')->name('destroy');
     });
-    
+
     Route::controller(AuditTrailsController::class)->name('audit-trails.')->prefix('audit-trails')->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::post('/', 'store')->name('store');
+    });
+
+    Route::controller(AttendanceController::class)->name('attendances.')->prefix('attendances')->group(function () {
+        Route::get('/site-user/{id}', 'getAttendance')->name('get-by-site-employee');
     });
 });
