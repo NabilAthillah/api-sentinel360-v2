@@ -58,10 +58,11 @@ class OccurrenceController extends Controller
             }
 
             AuditLogger::log(
-                "Occurrences created by {$userEmail}",
+                "Occurrence created by {$userEmail}",
                 $logDescription,
                 'success',
-                $userId
+                $userId,
+                'create occurrence'
             );
 
             return response()->json([
@@ -72,10 +73,11 @@ class OccurrenceController extends Controller
             DB::rollBack();
 
             AuditLogger::log(
-                "Failed to create occurrences",
+                "Failed to create occurrence",
                 "Error: " . $th->getMessage(),
                 'error',
-                Auth::id()
+                Auth::id(),
+                'create occurrence'
             );
 
             return response()->json([

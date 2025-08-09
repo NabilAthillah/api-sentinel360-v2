@@ -57,7 +57,8 @@ class RoleController extends Controller
                 "Role '{$role->name}' created by {$userEmail}",
                 "Role name: {$role->name}\nPermissions: {$permissionsList}",
                 'success',
-                $userId
+                $userId,
+                'create role'
             );
 
             return response()->json([
@@ -72,7 +73,8 @@ class RoleController extends Controller
                 "Failed to create role",
                 "Error: {$th->getMessage()}",
                 'error',
-                Auth::id()
+                Auth::id(),
+                'create role'
             );
 
             return response()->json([
@@ -95,7 +97,8 @@ class RoleController extends Controller
                     "Failed to update role",
                     "Role with ID $id not found",
                     'error',
-                    Auth::id()
+                    Auth::id(),
+                    'update role'
                 );
 
                 return response()->json([
@@ -140,7 +143,8 @@ class RoleController extends Controller
                 "Role '{$oldName}' updated by {$userEmail}",
                 $logDescription,
                 'success',
-                $userId
+                $userId,
+                'update role'
             );
 
             return response()->json([
@@ -155,7 +159,8 @@ class RoleController extends Controller
                 "Failed to update role",
                 "Error: {$th->getMessage()}",
                 'error',
-                Auth::id()
+                Auth::id(),
+                'update role'
             );
 
             return response()->json([

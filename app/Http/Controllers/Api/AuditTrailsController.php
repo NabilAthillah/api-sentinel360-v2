@@ -28,6 +28,7 @@ class AuditTrailsController extends Controller
             'description' => 'nullable|string',
             'user_id' => 'required|exists:users,id',
             'status' => 'nullable|string',
+            'category' => 'required|string'
         ]);
 
         $log = AuditTrails::create($validated);

@@ -81,7 +81,8 @@ class SiteController extends Controller
                 (Auth::user()->email ?? 'Unknown') . " created site {$site->name}",
                 json_encode($site->toArray(), JSON_PRETTY_PRINT),
                 'success',
-                Auth::id()
+                Auth::id(),
+                'create site'
             );
 
             return response()->json([
@@ -95,7 +96,8 @@ class SiteController extends Controller
                 "Failed to create site",
                 "Error: " . $th->getMessage(),
                 'error',
-                Auth::id()
+                Auth::id(),
+                'create site'
             );
 
             return response()->json([
@@ -193,7 +195,8 @@ class SiteController extends Controller
                 (Auth::user()->email ?? 'Unknown') . " updated site {$site->name}",
                 $log,
                 'success',
-                Auth::id()
+                Auth::id(),
+                'update site'
             );
 
             return response()->json([
@@ -207,7 +210,8 @@ class SiteController extends Controller
                 "Failed to update site",
                 "Error: " . $th->getMessage(),
                 'error',
-                Auth::id()
+                Auth::id(),
+                'update site'
             );
 
             return response()->json([
@@ -250,7 +254,8 @@ class SiteController extends Controller
                 (Auth::user()->email ?? 'Unknown') . " deleted site {$logData['name']}",
                 "Deleted data:\n" . json_encode($logData, JSON_PRETTY_PRINT),
                 'success',
-                Auth::id()
+                Auth::id(),
+                'delete site'
             );
 
             return response()->json([
@@ -264,7 +269,8 @@ class SiteController extends Controller
                 "Failed to delete site",
                 "Error: " . $th->getMessage(),
                 'error',
-                Auth::id()
+                Auth::id(),
+                'delete site'
             );
 
             return response()->json([

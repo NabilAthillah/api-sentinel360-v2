@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 class AuditLogger
 {
-    public static function log($title, $description = null, $status = 'info', $userId = null)
+    public static function log($title, $description = null, $status = 'info', $userId = null, $category = null)
     {
         AuditTrails::create([
             'id' => Str::uuid(),
@@ -16,6 +16,7 @@ class AuditLogger
             'description' => $description,
             'status' => $status,
             'user_id' => $userId ?? (Auth::check() ? Auth::id() : null),
+            'category' => $category
         ]);
     }
 }

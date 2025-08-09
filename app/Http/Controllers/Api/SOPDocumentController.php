@@ -68,7 +68,8 @@ class SOPDocumentController extends Controller
                     'after' => $sop->fresh()->toArray()
                 ], JSON_PRETTY_PRINT),
                 'success',
-                Auth::id()
+                Auth::id(),
+                'update sop document'
             );
 
             return response()->json([
@@ -82,7 +83,8 @@ class SOPDocumentController extends Controller
                 "Failed to update SOP Document ID: {$id}",
                 "Error: " . $th->getMessage(),
                 'error',
-                Auth::id()
+                Auth::id(),
+                'update sop document'
             );
 
             return response()->json([
@@ -134,7 +136,8 @@ class SOPDocumentController extends Controller
                 (Auth::user()->email ?? 'Unknown') . " created SOP Document: {$sop->name}",
                 json_encode($sop->toArray(), JSON_PRETTY_PRINT),
                 'success',
-                Auth::id()
+                Auth::id(),
+                'create sop document'
             );
 
             return response()->json([
@@ -149,7 +152,8 @@ class SOPDocumentController extends Controller
                 "Failed to create SOP Document",
                 "Error: " . $th->getMessage(),
                 'error',
-                Auth::id()
+                Auth::id(),
+                'create sop document'
             );
 
             return response()->json([
@@ -189,7 +193,8 @@ class SOPDocumentController extends Controller
                 (Auth::user()->email ?? 'Unknown') . " deleted SOP Document: {$deletedData['name']}",
                 json_encode($deletedData, JSON_PRETTY_PRINT),
                 'success',
-                Auth::id()
+                Auth::id(),
+                'delete sop document'
             );
 
             return response()->json([
@@ -203,7 +208,8 @@ class SOPDocumentController extends Controller
                 "Failed to delete SOP Document ID: {$id}",
                 "Error: " . $th->getMessage(),
                 'error',
-                Auth::id()
+                Auth::id(),
+                'delete sop document'
             );
 
             return response()->json([

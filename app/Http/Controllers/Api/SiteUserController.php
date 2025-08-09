@@ -151,7 +151,8 @@ class SiteUserController extends Controller
                     'Dates' => $allocatedDates,
                 ], JSON_PRETTY_PRINT),
                 'success',
-                Auth::id()
+                Auth::id(),
+                'site allocation'
             );
 
             return response()->json([
@@ -165,7 +166,8 @@ class SiteUserController extends Controller
                 'Allocation Failed',
                 "Error: " . $th->getMessage(),
                 'error',
-                Auth::id()
+                Auth::id(),
+                'site allocation'
             );
 
             return response()->json([
@@ -254,7 +256,8 @@ class SiteUserController extends Controller
                     'Dates Removed' => $disallocatedDates,
                 ], JSON_PRETTY_PRINT),
                 'success',
-                Auth::id()
+                Auth::id(),
+                'site disallocation'
             );
 
             return response()->json([
@@ -268,7 +271,8 @@ class SiteUserController extends Controller
                 'Disallocation Failed',
                 "Error: " . $th->getMessage(),
                 'error',
-                Auth::id()
+                Auth::id(),
+                'site disallocation'
             );
 
             return response()->json([

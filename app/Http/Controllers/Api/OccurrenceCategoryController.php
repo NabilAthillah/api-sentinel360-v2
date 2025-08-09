@@ -35,7 +35,8 @@ class OccurrenceCategoryController extends Controller
                     "Failed to update occurrence category",
                     "Category with ID $id not found",
                     'error',
-                    Auth::id()
+                    Auth::id(),
+                    'update occurrence category'
                 );
 
                 return response()->json([
@@ -68,7 +69,8 @@ class OccurrenceCategoryController extends Controller
                 "Occurrence category updated by " . (Auth::user()->email ?? 'Unknown'),
                 $description,
                 'success',
-                Auth::id()
+                Auth::id(),
+                'update occurrence category'
             );
 
             return response()->json([
@@ -82,7 +84,8 @@ class OccurrenceCategoryController extends Controller
                 "Exception while updating occurrence category",
                 "Error: {$th->getMessage()}",
                 'error',
-                Auth::id()
+                Auth::id(),
+                'update occurrence category'
             );
 
             return response()->json([
@@ -107,7 +110,8 @@ class OccurrenceCategoryController extends Controller
                     "Failed to create occurrence category",
                     "Attempted with name: {$request->name}",
                     'error',
-                    Auth::id()
+                    Auth::id(),
+                    'create occurrence category'
                 );
 
                 return response()->json([
@@ -122,7 +126,8 @@ class OccurrenceCategoryController extends Controller
                 "Occurrence category created by " . (Auth::user()->email ?? 'Unknown'),
                 "Category created with ID: {$category->id}, Name: {$category->name}",
                 'success',
-                Auth::id()
+                Auth::id(),
+                'create occurrence category'
             );
 
             return response()->json([
@@ -136,7 +141,8 @@ class OccurrenceCategoryController extends Controller
                 "Exception while creating occurrence category",
                 "Error: {$th->getMessage()}",
                 'error',
-                Auth::id()
+                Auth::id(),
+                'create occurrence category'
             );
 
             return response()->json([

@@ -30,7 +30,8 @@ class AuthController extends Controller
                     'Login Failed',
                     'Login attempt with missing email or password.',
                     'error',
-                    null
+                    null,
+                    'login'
                 );
 
                 return response()->json([
@@ -48,7 +49,8 @@ class AuthController extends Controller
                     'Login Failed',
                     "Login attempt with invalid email: {$request->email}",
                     'error',
-                    null
+                    null,
+                    'login'
                 );
 
                 return response()->json([
@@ -62,7 +64,8 @@ class AuthController extends Controller
                     'Login Failed',
                     "Invalid password attempt for email: {$request->email}",
                     'error',
-                    $user->id
+                    $user->id,
+                    'login'
                 );
 
                 return response()->json([
@@ -76,7 +79,8 @@ class AuthController extends Controller
                     'Login Failed',
                     "Laravel auth attempt failed for email: {$request->email}",
                     'error',
-                    $user->id
+                    $user->id,
+                    'login'
                 );
 
                 return response()->json([
@@ -90,7 +94,8 @@ class AuthController extends Controller
                     'Login Blocked',
                     "Inactive user attempted login: {$user->email}",
                     'warning',
-                    $user->id
+                    $user->id,
+                    'login'
                 );
 
                 return response()->json([
@@ -111,7 +116,8 @@ class AuthController extends Controller
                 'Login Successful',
                 "User {$user->email} logged in successfully.",
                 'success',
-                $user->id
+                $user->id,
+                'login'
             );
 
             DB::commit();
@@ -126,9 +132,17 @@ class AuthController extends Controller
             ], 200);
         } catch (\Throwable $th) {
             //throw $th;
+            AuditLogger::log(
+                'Login Failed',
+                "User attempted login: {$request->email}",
+                'warning',
+                null,
+                'login'
+            );
+
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Something went wrong'
+                'message' => 'Oops! Something went wrong' . $th->getMessage()
             ], 500);
         }
     }
@@ -145,7 +159,8 @@ class AuthController extends Controller
                     'Update Profile Failed',
                     "User with ID {$request->id} not found.",
                     'error',
-                    $request->id
+                    $request->id,
+                    'update profile'
                 );
 
                 return response()->json([
@@ -182,7 +197,8 @@ class AuthController extends Controller
                         'Update Profile Failed',
                         "Email {$request->email} is already used by another account.",
                         'error',
-                        $user->id
+                        $user->id,
+                        'update profile'
                     );
 
                     return response()->json([
@@ -207,7 +223,8 @@ class AuthController extends Controller
                         'Update Password Failed',
                         "Invalid old password provided by user {$user->email}.",
                         'error',
-                        $user->id
+                        $user->id,
+                        'update profile'
                     );
 
                     return response()->json([
@@ -239,7 +256,8 @@ class AuthController extends Controller
                 'Profile Updated',
                 $description,
                 'success',
-                $user->id
+                $user->id,
+                'update profile'
             );
 
             DB::commit();
@@ -258,7 +276,8 @@ class AuthController extends Controller
                 'Update Profile Failed',
                 'Exception: ' . $th->getMessage(),
                 'error',
-                $request->id
+                $request->id,
+                'update profile'
             );
 
             return response()->json([

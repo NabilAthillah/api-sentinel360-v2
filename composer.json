@@ -25,7 +25,7 @@
     },
     "autoload": {
         "files": [
-            "app/Helpers/ActivityLogger.php"
+            "app/Helpers/AuditLogger.php"
         ],
         "psr-4": {
             "App\\": "app/",

@@ -23,7 +23,8 @@ class RouteController extends Controller
                     "Failed to update route",
                     "Route with ID $id not found",
                     'error',
-                    Auth::id()
+                    Auth::id(),
+                    'update site route'
                 );
 
                 return response()->json([
@@ -62,7 +63,8 @@ class RouteController extends Controller
                 "Route updated by " . (Auth::user()->email ?? 'Unknown'),
                 $desc,
                 'success',
-                Auth::id()
+                Auth::id(),
+                'update site route'
             );
 
             return response()->json([
@@ -76,7 +78,8 @@ class RouteController extends Controller
                 "Failed to update route",
                 "Error: {$th->getMessage()}",
                 'error',
-                Auth::id()
+                Auth::id(),
+                'update site route'
             );
 
             return response()->json([
@@ -110,7 +113,8 @@ class RouteController extends Controller
                 "Route created by " . (Auth::user()->email ?? 'Unknown'),
                 "Name: {$route->name}\nSite ID: {$route->id_site}",
                 'success',
-                Auth::id()
+                Auth::id(),
+                'create site route'
             );
 
             return response()->json([
@@ -124,7 +128,8 @@ class RouteController extends Controller
                 "Failed to create route",
                 "Error: {$th->getMessage()}",
                 'error',
-                Auth::id()
+                Auth::id(),
+                'create site route'
             );
 
             return response()->json([
@@ -147,7 +152,8 @@ class RouteController extends Controller
                     "Failed to delete route",
                     "Route with ID $id not found",
                     'error',
-                    Auth::id()
+                    Auth::id(),
+                    'delete site route'
                 );
 
                 return response()->json([
@@ -166,7 +172,8 @@ class RouteController extends Controller
                 "Route deleted by " . (Auth::user()->email ?? 'Unknown'),
                 "Deleted Route Info:\n{$routeInfo}",
                 'success',
-                Auth::id()
+                Auth::id(),
+                'delete site route'
             );
 
             return response()->json([
@@ -180,7 +187,8 @@ class RouteController extends Controller
                 "Failed to delete route",
                 "Error: {$th->getMessage()}",
                 'error',
-                Auth::id()
+                Auth::id(),
+                'delete site route'
             );
 
             return response()->json([

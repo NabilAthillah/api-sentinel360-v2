@@ -106,7 +106,8 @@ class IncidentController extends Controller
                     "Damage Note: {$incident->damage_note}\n" .
                     "CCTV Image: {$incident->$imagePath}\n",
                 'success',
-                $request->user()->id ?? null
+                $request->user()->id ?? null,
+                'create incident'
             );
 
             return response()->json([
@@ -120,7 +121,8 @@ class IncidentController extends Controller
                 'Incident Creation Failed',
                 "Error: " . $th->getMessage(),
                 'error',
-                $request->user()->id ?? null
+                $request->user()->id ?? null,
+                'create incident'
             );
 
             return response()->json([
@@ -142,7 +144,8 @@ class IncidentController extends Controller
                     "Failed to update incident",
                     "Incident with ID $id not found",
                     'error',
-                    $request->user()->id ?? null
+                    $request->user()->id ?? null,
+                    'update incident'
                 );
 
                 return response()->json([
@@ -228,7 +231,8 @@ class IncidentController extends Controller
                 "Incident updated by {$request->user()->email}",
                 $description,
                 'success',
-                $request->user()->id ?? null
+                $request->user()->id ?? null,
+                'update incident'
             );
 
             return response()->json([
@@ -242,7 +246,8 @@ class IncidentController extends Controller
                 "Failed to update incident",
                 "Error: {$th->getMessage()}",
                 'error',
-                $request->user()->id ?? null
+                $request->user()->id ?? null,
+                'update incident'
             );
 
             return response()->json([
@@ -265,7 +270,8 @@ class IncidentController extends Controller
                     "Failed to delete incident",
                     "Incident with ID $id not found",
                     'error',
-                    Auth::id()
+                    Auth::id(),
+                    'delete incident'
                 );
                 return response()->json([
                     'success' => false,
@@ -283,7 +289,8 @@ class IncidentController extends Controller
                 "Incident deleted by " . (Auth::user()->email ?? 'Unknown'),
                 "Incident with ID $id deleted",
                 'success',
-                Auth::id()
+                Auth::id(),
+                'delete incident'
             );
             return response()->json([
                 'success' => true,
@@ -296,7 +303,8 @@ class IncidentController extends Controller
                 "Failed to delete incident",
                 "Error: {$th->getMessage()}",
                 'error',
-                Auth::id() 
+                Auth::id(),
+                'delete incident'
             );
             return response()->json([
                 'success' => false,

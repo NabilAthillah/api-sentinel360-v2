@@ -31,7 +31,8 @@ class IncidentTypeController extends Controller
                     "Failed to update incident type",
                     "Type with ID $id not found",
                     'error',
-                    Auth::id()
+                    Auth::id(),
+                    'update incident type'
                 );
 
                 return response()->json([
@@ -64,7 +65,8 @@ class IncidentTypeController extends Controller
                 "Incident type updated by " . (Auth::user()->email ?? 'Unknown'),
                 $description,
                 'success',
-                Auth::id()
+                Auth::id(),
+                'update incident type'
             );
 
             return response()->json([
@@ -78,7 +80,8 @@ class IncidentTypeController extends Controller
                 "Exception while updating incident type",
                 "Error: {$th->getMessage()}",
                 'error',
-                Auth::id()
+                Auth::id(),
+                'update incident type'
             );
 
             return response()->json([
@@ -103,7 +106,8 @@ class IncidentTypeController extends Controller
                     "Failed to create incident type",
                     "Attempted with name: {$request->name}",
                     'error',
-                    Auth::id()
+                    Auth::id(),
+                    'update incident type'
                 );
 
                 return response()->json([
@@ -118,7 +122,8 @@ class IncidentTypeController extends Controller
                 "Incident type created by " . (Auth::user()->email ?? 'Unknown'),
                 "Type created with ID: {$type->id}, Name: {$type->name}",
                 'success',
-                Auth::id()
+                Auth::id(),
+                'update incident type'
             );
 
             return response()->json([
@@ -132,7 +137,8 @@ class IncidentTypeController extends Controller
                 "Exception while creating incident type",
                 "Error: {$th->getMessage()}",
                 'error',
-                Auth::id()
+                Auth::id(),
+                'update incident type'
             );
 
             return response()->json([

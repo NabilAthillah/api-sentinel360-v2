@@ -85,7 +85,8 @@ class ClientInfoController extends Controller
             (Auth::user()->email ?? 'Unknown') . " updated client info",
             $logDesc,
             'success',
-            Auth::id()
+            Auth::id(),
+            'update client info'
         );
 
         return response()->json([
@@ -99,7 +100,8 @@ class ClientInfoController extends Controller
             "Failed to update client info",
             "Error: " . $th->getMessage(),
             'error',
-            Auth::id()
+            Auth::id(),
+            'update client info'
         );
 
         return response()->json([

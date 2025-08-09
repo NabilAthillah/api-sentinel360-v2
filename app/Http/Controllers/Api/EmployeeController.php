@@ -55,7 +55,8 @@ class EmployeeController extends Controller
                     "Attempt to add duplicate employee",
                     "Employee with email {$request->email} already exists",
                     'error',
-                    $request->user()->id ?? null
+                    $request->user()->id ?? null,
+                    'create employee'
                 );
 
                 return response()->json([
@@ -82,7 +83,8 @@ class EmployeeController extends Controller
                     "Failed to create user record",
                     "Error occurred while creating user: {$request->email}",
                     'error',
-                    $request->user()->id ?? null
+                    $request->user()->id ?? null,
+                    'create employee'
                 );
 
                 return response()->json([
@@ -150,7 +152,8 @@ class EmployeeController extends Controller
                     "- Q9: {$request->q9} | A9: {$request->a9}\n" .
 
                     'success',
-                $request->user()->id ?? null
+                $request->user()->id ?? null,
+                'create employee'
             );
 
             return response()->json([
@@ -167,7 +170,8 @@ class EmployeeController extends Controller
                 "Employee creation failed",
                 "Error: {$th->getMessage()}",
                 'error',
-                $request->user()->id ?? null
+                $request->user()->id ?? null,
+                'create employee'
             );
 
             return response()->json([
@@ -187,7 +191,8 @@ class EmployeeController extends Controller
                     "Failed to update employee",
                     "Employee with ID $id not found",
                     'error',
-                    $request->user()->id ?? null
+                    $request->user()->id ?? null,
+                    'update employee'
                 );
 
                 return response()->json([
@@ -202,7 +207,8 @@ class EmployeeController extends Controller
                     "Failed to update employee",
                     "Related user not found for employee ID $id",
                     'error',
-                    $request->user()->id ?? null
+                    $request->user()->id ?? null,
+                    'update employee'
                 );
 
                 return response()->json([
@@ -217,7 +223,8 @@ class EmployeeController extends Controller
                     "Email conflict on employee update",
                     "Attempted to update to existing email: {$request->email}",
                     'error',
-                    $request->user()->id ?? null
+                    $request->user()->id ?? null,
+                    'update employee'
                 );
 
                 return response()->json([
@@ -358,7 +365,8 @@ class EmployeeController extends Controller
                 "{$request->user()->email} updated employee {$user->name}",
                 $description,
                 'success',
-                $request->user()->id ?? null
+                $request->user()->id ?? null,
+                'update employee'
             );
 
             return response()->json([
@@ -372,7 +380,8 @@ class EmployeeController extends Controller
                 "Failed to update employee",
                 "Error: {$th->getMessage()}",
                 'error',
-                $request->user()->id ?? null
+                $request->user()->id ?? null,
+                'update employee'
             );
 
             return response()->json([
@@ -396,7 +405,8 @@ class EmployeeController extends Controller
                     "Failed to update employee status",
                     "Employee with ID $id not found",
                     'error',
-                    $request->user()->id ?? null
+                    $request->user()->id ?? null,
+                    'update employee status'
                 );
 
                 return response()->json([
@@ -429,7 +439,8 @@ class EmployeeController extends Controller
                     "Employee Rejected and Deleted",
                     "{$request->user()->email} rejected and deleted employee: {$employeeName}",
                     'warning',
-                    $request->user()->id ?? null
+                    $request->user()->id ?? null,
+                    'update employee status'
                 );
 
                 return response()->json([
@@ -451,7 +462,8 @@ class EmployeeController extends Controller
                 "Employee Status Updated",
                 "{$request->user()->email} updated employee ID {$employee->id} status from {$oldStatus} to {$request->status}",
                 'info',
-                $request->user()->id ?? null
+                $request->user()->id ?? null,
+                'update employee status'
             );
 
             return response()->json([
@@ -466,7 +478,8 @@ class EmployeeController extends Controller
                 "Failed to update employee status",
                 "Error: {$th->getMessage()}",
                 'error',
-                $request->user()->id ?? null
+                $request->user()->id ?? null,
+                'update employee status'
             );
 
             return response()->json([
@@ -488,7 +501,8 @@ class EmployeeController extends Controller
                     "Failed to delete employee",
                     "Employee with ID $id not found",
                     'error',
-                    $request->user()->id ?? null
+                    $request->user()->id ?? null,
+                    'delete employee'
                 );
 
                 return response()->json([
@@ -513,7 +527,8 @@ class EmployeeController extends Controller
                 "Employee Deleted",
                 "{$request->user()->email} deleted employee: {$employeeName} ({$employeeEmail})",
                 'warning',
-                $request->user()->id ?? null
+                $request->user()->id ?? null,
+                'delete employee'
             );
 
             return response()->json([
@@ -530,7 +545,8 @@ class EmployeeController extends Controller
                 "Failed to delete employee",
                 "Error: {$th->getMessage()}",
                 'error',
-                $request->user()->id ?? null
+                $request->user()->id ?? null,
+                'delete employee'
             );
 
             return response()->json([

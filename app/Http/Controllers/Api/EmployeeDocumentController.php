@@ -30,7 +30,8 @@ class EmployeeDocumentController extends Controller
                     'Update Document Failed',
                     "Document with ID {$id} not found.",
                     'error',
-                    $request->user()->id ?? null
+                    $request->user()->id ?? null,
+                    'update employee document'
                 );
 
                 return response()->json([
@@ -63,7 +64,8 @@ class EmployeeDocumentController extends Controller
                 'Employee Document Updated',
                 $description,
                 'success',
-                $request->user()->id ?? null
+                $request->user()->id ?? null,
+                'update employee document'
             );
 
             DB::commit();
@@ -79,7 +81,8 @@ class EmployeeDocumentController extends Controller
                 'Update Document Failed',
                 'Exception: ' . $th->getMessage(),
                 'error',
-                $request->user()->id ?? null
+                $request->user()->id ?? null,
+                'update employee document'
             );
 
             return response()->json([
@@ -102,7 +105,8 @@ class EmployeeDocumentController extends Controller
                     'Create Document Failed',
                     "Failed to create document with name {$request->name}.",
                     'error',
-                    $request->user()->id ?? null
+                    $request->user()->id ?? null,
+                    'create employee document'
                 );
 
                 return response()->json([
@@ -115,7 +119,8 @@ class EmployeeDocumentController extends Controller
                 'Document Created',
                 "Created employee document with name: {$document->name} (ID: {$document->id})",
                 'success',
-                $request->user()->id ?? null
+                $request->user()->id ?? null,
+                'create employee document'
             );
 
             DB::commit();
@@ -131,7 +136,8 @@ class EmployeeDocumentController extends Controller
                 'Create Document Failed',
                 'Exception: ' . $th->getMessage(),
                 'error',
-                $request->user()->id ?? null
+                $request->user()->id ?? null,
+                'create employee document'
             );
 
             return response()->json([
