@@ -111,6 +111,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/allocation/{id}', 'allocation')->name('allocation');
 
         Route::get('/user/nearest/{id}', 'nearest')->name('nearest')->withoutMiddleware('auth:sanctum');
+        Route::get('/user/data/{id}', 'data')->name('data')->withoutMiddleware('auth:sanctum');
     });
 
     Route::controller(EmployeeDocumentController::class)->name('employee-documents.')->prefix('employee-documents')->group(function () {
@@ -152,5 +153,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::controller(AttendanceController::class)->name('attendances.')->prefix('attendances')->group(function () {
         Route::get('/site-user/{id}', 'getAttendance')->name('get-by-site-employee');
+        Route::post('/', 'store')->name('store');
     });
 });

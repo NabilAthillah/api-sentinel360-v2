@@ -18,7 +18,19 @@ class AttendanceController extends Controller
             ]);
         } else {
             return response()->json([
-                'success' => true,
+                'success' => false,
+                'data' => null,
+            ]);
+        }
+    }
+
+    public function store(Request $request)
+    {
+        try {
+            //code...
+        } catch (\Throwable $th) {
+            return response()->json([
+                'success' => false,
                 'data' => null,
             ]);
         }

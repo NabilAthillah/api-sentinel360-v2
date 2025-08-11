@@ -284,13 +284,32 @@ class SiteUserController extends Controller
 
     public function nearest($id)
     {
-        $data = SiteUser::where('id_employee', $id)
-            ->whereDate('date', '>=', Carbon::today())
+        $data = SiteUser::with('attendance')->where('id_employee', $id)
+            ->whereDate('date', '=', Carbon::today())
             ->orderBy('date', 'asc')
             ->first();
 
         return response()->json([
             'success' => true,
+            'data' => $data,
+        ]);
+    }
+
+    public function data($id)
+    {
+        $data = SiteUser::with('attendance')->where('id_employee', $id)
+            ->whereDate('date', '=', Carbon::today())
+            ->orderBy('date', 'asc')
+            ->first();
+
+        $datas = SiteUser::with('attendance')->where('id_employee', $id)
+            ->where('id', '<>', $data->id)
+            ->orderBy('date', 'asc')
+            ->limit(2)->get();
+
+        return response()->json([
+            'success' => true,
+            'datas' => $datas,
             'data' => $data,
         ]);
     }
