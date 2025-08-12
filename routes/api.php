@@ -154,5 +154,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(AttendanceController::class)->name('attendances.')->prefix('attendances')->group(function () {
         Route::get('/site-user/{id}', 'getAttendance')->name('get-by-site-employee');
         Route::post('/', 'store')->name('store');
+        Route::put('/{id}', 'update')->name('update');
     });
 });
