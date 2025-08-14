@@ -18,6 +18,8 @@ use App\Http\Controllers\Api\SiteUserController;
 use App\Http\Controllers\Api\SOPDocumentController;
 use App\Http\Controllers\Api\AuditTrailsController;
 use App\Http\Controllers\Api\AttendanceController;
+use App\Http\Controllers\Api\LanguageController;
+use App\Http\Controllers\UserLanguageController;
 use App\Models\AttendanceSetting;
 use App\Models\SOPDocument;
 use Illuminate\Http\Request;
@@ -154,6 +156,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(AttendanceController::class)->name('attendances.')->prefix('attendances')->group(function () {
         Route::get('/site-user/{id}', 'getAttendance')->name('get-by-site-employee');
         Route::post('/', 'store')->name('store');
+        Route::put('/{id}', 'update')->name('update');
+    });
+
+   Route::controller(LanguageController::class)->name('language.')->prefix('language')->group(function () {
+        Route::get('/', 'index')->name('index');
         Route::put('/{id}', 'update')->name('update');
     });
 });

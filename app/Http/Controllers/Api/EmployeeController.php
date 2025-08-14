@@ -149,12 +149,12 @@ class EmployeeController extends Controller
                     "- Q6: {$request->q6} | A6: {$request->a6}\n" .
                     "- Q7: {$request->q7} | A7: {$request->a7}\n" .
                     "- Q8: {$request->q8} | A8: {$request->a8}\n" .
-                    "- Q9: {$request->q9} | A9: {$request->a9}\n" .
-
-                    'success',
+                    "- Q9: {$request->q9} | A9: {$request->a9}",
+                'success', 
                 $request->user()->id ?? null,
-                'create employee'
+                'create employee' 
             );
+
 
             return response()->json([
                 'success' => true,
