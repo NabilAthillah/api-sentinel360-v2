@@ -93,7 +93,7 @@ class AuthController extends Controller
                 AuditLogger::log(
                     'Login Blocked',
                     "Inactive user attempted login: {$user->email}",
-                    'warning',
+                    'error',
                     $user->id,
                     'login'
                 );
@@ -135,7 +135,7 @@ class AuthController extends Controller
             AuditLogger::log(
                 'Login Failed',
                 "User attempted login: {$request->email}",
-                'warning',
+                'error',
                 null,
                 'login'
             );
@@ -211,7 +211,7 @@ class AuthController extends Controller
                 AuditLogger::log(
                     'Login Blocked',
                     "Inactive user attempted login: {$user->email}",
-                    'warning',
+                    'error',
                     $user->id,
                     'login'
                 );
@@ -255,7 +255,7 @@ class AuthController extends Controller
             AuditLogger::log(
                 'Login Failed',
                 "User attempted login: {$request->phone}",
-                'warning',
+                'error',
                 null,
                 'login'
             );

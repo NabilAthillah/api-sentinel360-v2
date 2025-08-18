@@ -438,7 +438,7 @@ class EmployeeController extends Controller
                 AuditLogger::log(
                     "Employee Rejected and Deleted",
                     "{$request->user()->email} rejected and deleted employee: {$employeeName}",
-                    'warning',
+                    'error',
                     $request->user()->id ?? null,
                     'update employee status'
                 );
@@ -461,7 +461,7 @@ class EmployeeController extends Controller
             AuditLogger::log(
                 "Employee Status Updated",
                 "{$request->user()->email} updated employee ID {$employee->id} status from {$oldStatus} to {$request->status}",
-                'info',
+                'success',
                 $request->user()->id ?? null,
                 'update employee status'
             );
@@ -526,7 +526,7 @@ class EmployeeController extends Controller
             AuditLogger::log(
                 "Employee Deleted",
                 "{$request->user()->email} deleted employee: {$employeeName} ({$employeeEmail})",
-                'warning',
+                'error',
                 $request->user()->id ?? null,
                 'delete employee'
             );

@@ -87,7 +87,7 @@ class DataSeeder extends Seeder
                 'category' => 'Master Settings'
             ],
             [
-                'name' => 'add_occurence_category',
+                'name' => 'add_occurrence_category',
                 'category' => 'Master Settings'
             ],
             [
@@ -95,7 +95,7 @@ class DataSeeder extends Seeder
                 'category' => 'Master Settings'
             ],
             [
-                'name' => 'edit_occurence_category',
+                'name' => 'edit_occurrence_category',
                 'category' => 'Master Settings'
             ],
             [
