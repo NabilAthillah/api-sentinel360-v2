@@ -18,7 +18,6 @@ return new class extends Migration
         $table->text('description')->nullable();
         $table->string('status')->default('info');
         $table->string('category');
-        $table->string('ip')->nullable();
         $table->timestamps();
     });
     }
