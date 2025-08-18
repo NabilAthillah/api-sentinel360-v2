@@ -31,8 +31,6 @@ class AuditTrailsController extends Controller
             'category' => 'required|string'
         ]);
 
-        $validated['ip'] = $request->ip();
-
         $log = AuditTrails::create($validated);
 
         return response()->json([
