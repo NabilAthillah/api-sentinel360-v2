@@ -51,6 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}', 'update')->name('update');
         Route::post('/delete/{id}', 'destroy')->name('destroy');
         Route::put('/{id}/status', 'updateStatus')->name('updateStatus');
+        Route::put('/profile/{id}', 'updateProfile')->name('updateProfile');
     });
 
     Route::controller(RoleController::class)->name('roles.')->prefix('roles')->group(function () {
@@ -99,6 +100,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::post('/', 'store')->name('store');
         Route::put('/{id}', 'update')->name('update');
+        Route::delete('/{id}', 'destroy')->name('destroy');
     });
 
     Route::controller(ClientInfoController::class)->name('client-info.')->prefix('client-info')->group(function () {

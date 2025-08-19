@@ -86,4 +86,15 @@ class OccurrenceController extends Controller
             ], 500);
         }
     }
+
+    public function destroy($id)
+    {
+        $data = Occurrence::findOrFail($id);
+
+        $data->delete();
+
+        return response()->json([
+            'success' => true
+        ]);
+    }
 }

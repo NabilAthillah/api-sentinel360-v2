@@ -296,8 +296,60 @@ class SiteUserController extends Controller
 
     public function nearest($id)
     {
-        $data = SiteUser::with('attendance')->where('id_employee', $id)
-            ->whereDate('date', '=', Carbon::today())
+        $shift = AttendanceSetting::first();
+
+        $tz = 'Asia/Singapore';
+        $now = Carbon::now($tz);
+
+        $dayStart = Carbon::today($tz)->setTimeFromTimeString($shift->day_shift_start_time);
+        $dayEnd = Carbon::today($tz)->setTimeFromTimeString($shift->day_shift_end_time);
+
+        $relDayStart = Carbon::today($tz)->setTimeFromTimeString($shift->relief_day_shift_start_time);
+        $relDayEnd = Carbon::today($tz)->setTimeFromTimeString($shift->relief_day_shift_end_time);
+
+        $nightStartPrev = Carbon::yesterday($tz)->setTimeFromTimeString($shift->night_shift_start_time);
+        $nightEndPrev = Carbon::today($tz)->setTimeFromTimeString($shift->night_shift_end_time);
+
+        $relNightStartPrev = Carbon::yesterday($tz)->setTimeFromTimeString($shift->relief_night_shift_start_time);
+        $relNightEndPrev = Carbon::today($tz)->setTimeFromTimeString($shift->relief_night_shift_end_time);
+
+        $nightStartToday = Carbon::today($tz)->setTimeFromTimeString($shift->night_shift_start_time);
+        $nightEndToday = Carbon::tomorrow($tz)->setTimeFromTimeString($shift->night_shift_end_time);
+
+        $relNightStartToday = Carbon::today($tz)->setTimeFromTimeString($shift->relief_night_shift_start_time);
+        $relNightEndToday = Carbon::tomorrow($tz)->setTimeFromTimeString($shift->relief_night_shift_end_time);
+
+        $activeShift = null;
+        $scheduleDate = Carbon::today($tz)->toDateString();
+
+        if ($now->betweenIncluded($dayStart, $dayEnd)) {
+            $activeShift = 'day';
+            $scheduleDate = $dayStart->toDateString();
+
+        } elseif ($now->betweenIncluded($relDayStart, $relDayEnd)) {
+            $activeShift = 'relief_day';
+            $scheduleDate = $relDayStart->toDateString();
+
+        } elseif ($now->betweenIncluded($nightStartPrev, $nightEndPrev)) {
+            $activeShift = 'night';
+            $scheduleDate = $nightStartPrev->toDateString();
+
+        } elseif ($now->betweenIncluded($nightStartToday, $nightEndToday)) {
+            $activeShift = 'night';
+            $scheduleDate = $nightStartToday->toDateString();
+
+        } elseif ($now->betweenIncluded($relNightStartPrev, $relNightEndPrev)) {
+            $activeShift = 'relief_night';
+            $scheduleDate = $relNightStartPrev->toDateString();
+
+        } elseif ($now->betweenIncluded($relNightStartToday, $relNightEndToday)) {
+            $activeShift = 'relief_night';
+            $scheduleDate = $relNightStartToday->toDateString();
+        }
+
+        $data = SiteUser::with('attendance')
+            ->where('id_employee', $id)
+            ->whereDate('date', $scheduleDate)
             ->orderBy('date', 'asc')
             ->first();
 
@@ -370,12 +422,26 @@ class SiteUserController extends Controller
             $datas = SiteUser::with('attendance')
                 ->where('id_employee', $id)
                 ->where('id', '<>', $data->id)
+                ->where(function ($q) use ($now) {
+                    $q->whereDate('date', '<', $now->toDateString())
+                        ->orWhere(function ($q2) use ($now) {
+                            $q2->whereDate('date', $now->toDateString())
+                                ->whereTime('date', '<=', $now->toTimeString());
+                        });
+                })
                 ->orderBy('date', 'asc')
                 ->limit(2)
                 ->get();
         } else {
             $datas = SiteUser::with('attendance')
                 ->where('id_employee', $id)
+                ->where(function ($q) use ($now) {
+                    $q->whereDate('date', '<', $now->toDateString())
+                        ->orWhere(function ($q2) use ($now) {
+                            $q2->whereDate('date', $now->toDateString())
+                                ->whereTime('date', '<=', $now->toTimeString());
+                        });
+                })
                 ->orderBy('date', 'asc')
                 ->limit(2)
                 ->get();

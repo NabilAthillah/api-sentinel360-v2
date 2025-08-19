@@ -10,6 +10,7 @@ use DB;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Ramsey\Uuid\Uuid;
 use Storage;
 
@@ -127,32 +128,32 @@ class EmployeeController extends Controller
             AuditLogger::log(
                 "{$request->user()->email} has added a new employee",
                 "New Employee Created:\n" .
-                    "User Info:\n" .
-                    "- Name: {$request->name}\n" .
-                    "- Email: {$request->email}\n" .
-                    "- Mobile: {$request->mobile}\n" .
-                    "- Address: {$request->address}\n" .
-                    "- Role ID: {$request->id_role}\n" .
-                    "- Status: inactive\n\n" .
-                    "Employee Info:\n" .
-                    "- NRIC/FIN No: {$request->nric_fin_no}\n" .
-                    "- Birth Date: {$request->birth}\n" .
-                    "- Briefing Date: {$request->briefing_date}\n" .
-                    "- Briefing Conducted: {$request->briefing_conducted}\n" .
-                    "- Date Joined: {$request->date_joined}\n" .
-                    "- Reporting To: {$request->reporting_to}\n" .
-                    "- Q1: {$request->q1} | A1: {$request->a1}\n" .
-                    "- Q2: {$request->q2} | A2: {$request->a2}\n" .
-                    "- Q3: {$request->q3} | A3: {$request->a3}\n" .
-                    "- Q4: {$request->q4} | A4: {$request->a4}\n" .
-                    "- Q5: {$request->q5} | A5: {$request->a5}\n" .
-                    "- Q6: {$request->q6} | A6: {$request->a6}\n" .
-                    "- Q7: {$request->q7} | A7: {$request->a7}\n" .
-                    "- Q8: {$request->q8} | A8: {$request->a8}\n" .
-                    "- Q9: {$request->q9} | A9: {$request->a9}",
-                'success', 
+                "User Info:\n" .
+                "- Name: {$request->name}\n" .
+                "- Email: {$request->email}\n" .
+                "- Mobile: {$request->mobile}\n" .
+                "- Address: {$request->address}\n" .
+                "- Role ID: {$request->id_role}\n" .
+                "- Status: inactive\n\n" .
+                "Employee Info:\n" .
+                "- NRIC/FIN No: {$request->nric_fin_no}\n" .
+                "- Birth Date: {$request->birth}\n" .
+                "- Briefing Date: {$request->briefing_date}\n" .
+                "- Briefing Conducted: {$request->briefing_conducted}\n" .
+                "- Date Joined: {$request->date_joined}\n" .
+                "- Reporting To: {$request->reporting_to}\n" .
+                "- Q1: {$request->q1} | A1: {$request->a1}\n" .
+                "- Q2: {$request->q2} | A2: {$request->a2}\n" .
+                "- Q3: {$request->q3} | A3: {$request->a3}\n" .
+                "- Q4: {$request->q4} | A4: {$request->a4}\n" .
+                "- Q5: {$request->q5} | A5: {$request->a5}\n" .
+                "- Q6: {$request->q6} | A6: {$request->a6}\n" .
+                "- Q7: {$request->q7} | A7: {$request->a7}\n" .
+                "- Q8: {$request->q8} | A8: {$request->a8}\n" .
+                "- Q9: {$request->q9} | A9: {$request->a9}",
+                'success',
                 $request->user()->id ?? null,
-                'create employee' 
+                'create employee'
             );
 
 
@@ -555,5 +556,45 @@ class EmployeeController extends Controller
                 'error' => $th->getMessage()
             ], 500);
         }
+    }
+
+    public function updateProfile(Request $request, $id)
+    {
+        if ((int) $request->user()->id !== (int) $id) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'mobile' => ['nullable', 'string', 'max:50'],
+            'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($id)],
+            'birth' => ['nullable', 'date_format:Y-m-d'],
+            'nric_fin_no' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $user = User::with('employee', 'role')->findOrFail($id);
+
+        DB::transaction(function () use ($user, $validated) {
+            $user->update([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'mobile' => $validated['mobile'] ?? null,
+            ]);
+
+            $user->employee()->updateOrCreate(
+                ['id_user' => $user->id],
+                [
+                    'birth' => $validated['birth'] ?? null,
+                    'nric_fin_no' => $validated['nric_fin_no'] ?? null,
+                ]
+            );
+        });
+
+        $user->load(['employee', 'role']);
+
+        return response()->json([
+            'success' => true,
+            'user' => $user,
+        ]);
     }
 }
