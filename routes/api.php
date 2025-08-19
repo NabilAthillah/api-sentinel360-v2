@@ -108,6 +108,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::controller(SiteUserController::class)->name('site-user.')->prefix('site-user')->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::get('/{id}', 'show')->name('show');
         Route::post('/disallocation', 'disallocation')->name('disallocation');
         Route::put('/{id}', 'update')->name('update');
         Route::put('/allocation/{id}', 'allocation')->name('allocation');
