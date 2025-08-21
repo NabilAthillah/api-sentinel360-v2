@@ -234,6 +234,14 @@ class DataSeeder extends Seeder
                 'name' => 'edit_e-occurrence',
                 'category' => 'e-Occurrence'
             ],
+            [
+                'name' => 'list_reports',
+                'category' => 'report'
+            ],
+            [
+                'name' => 'list_audit_trails',
+                'category' => 'audit_trails'
+            ],
         ];
 
         $role = Role::where('name', 'Administrator')->first();
