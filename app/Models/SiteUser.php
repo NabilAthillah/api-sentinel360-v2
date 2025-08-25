@@ -20,9 +20,9 @@ class SiteUser extends Model
         return $this->belongsTo(Site::class, 'id_site', 'id');
     }
 
-    public function employee()
+    public function user()
     {
-        return $this->belongsTo(Employee::class, 'id_employee', 'id');
+        return $this->belongsTo(User::class, 'id_user', 'id');
     }
 
     public function attendance()

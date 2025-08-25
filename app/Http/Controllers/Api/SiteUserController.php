@@ -5,14 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Helpers\AuditLogger;
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceSetting;
-use App\Models\Employee;
 use App\Models\Site;
 use App\Models\SiteUser;
+use App\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
-use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class SiteUserController extends Controller
 {
@@ -22,7 +22,7 @@ class SiteUserController extends Controller
         $shiftType = $request->shiftType;
         $dateInput = $request->date;
 
-        $query = SiteUser::with(['employee.user', 'site'])
+        $query = SiteUser::with(['user', 'site'])
             ->where('shift', $shiftType);
 
         if ($allocationType === 'bydate') {
@@ -48,7 +48,7 @@ class SiteUserController extends Controller
                 $daysInMonth = $startOfMonth->daysInMonth;
 
                 // Ambil semua SiteUser di bulan dan shift tersebut
-                $siteUsers = SiteUser::with(['employee.user', 'site'])
+                $siteUsers = SiteUser::with(['user', 'site'])
                     ->where('shift', $shiftType)
                     ->whereBetween('date', [$startOfMonth, $endOfMonth])
                     ->get()
@@ -89,7 +89,7 @@ class SiteUserController extends Controller
                 ], 404);
             }
 
-            $employee = Employee::find($request->id_employee);
+            $employee = User::find($request->id_employee);
             if (!$employee) {
                 return response()->json([
                     'success' => false,
@@ -105,7 +105,7 @@ class SiteUserController extends Controller
 
             if ($allocationType === 'bydate') {
                 SiteUser::create([
-                    'id_employee' => $employee->id,
+                    'id_user' => $employee->id,
                     'id_site' => $site->id,
                     'shift' => $shiftType,
                     'date' => $dateInput,
@@ -125,7 +125,7 @@ class SiteUserController extends Controller
                 $dates = CarbonPeriod::create($startOfMonth, $endOfMonth);
                 foreach ($dates as $date) {
                     SiteUser::create([
-                        'id_employee' => $employee->id,
+                        'id_user' => $employee->id,
                         'id_site' => $site->id,
                         'shift' => $shiftType,
                         'date' => $date->toDateString(),
@@ -173,7 +173,7 @@ class SiteUserController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Something went wrong: '
+                'message' => 'Oops! Something went wrong' . $th->getMessage()
             ], 500);
         }
     }
@@ -183,7 +183,7 @@ class SiteUserController extends Controller
         try {
             DB::beginTransaction();
 
-            $employee = Employee::where('id', $request->id_employee)->first();
+            $employee = User::where('id', $request->id_employee)->first();
 
             if (!$employee) {
                 return response()->json([
@@ -202,7 +202,7 @@ class SiteUserController extends Controller
                 $date = Carbon::createFromFormat('Y-m-d', $dateInput);
 
                 SiteUser::where('id_site', $siteId)
-                    ->where('id_employee', $employee->id)
+                    ->where('id_user', $employee->id)
                     ->where('shift', $shiftType)
                     ->whereDate('date', $date)
                     ->delete();
@@ -218,14 +218,14 @@ class SiteUserController extends Controller
                     $endOfMonth = $date->copy()->endOfMonth();
 
                     $datesToDelete = SiteUser::where('id_site', $siteId)
-                        ->where('id_employee', $employee->id)
+                        ->where('id_user', $employee->id)
                         ->where('shift', $shiftType)
                         ->whereBetween('date', [$startOfMonth, $endOfMonth])
                         ->pluck('date')
                         ->toArray();
 
                     SiteUser::where('id_site', $siteId)
-                        ->where('id_employee', $employee->id)
+                        ->where('id_user', $employee->id)
                         ->where('shift', $shiftType)
                         ->whereBetween('date', [$startOfMonth, $endOfMonth])
                         ->delete();
@@ -332,7 +332,7 @@ class SiteUserController extends Controller
 
         } elseif ($now->betweenIncluded($nightStartPrev, $nightEndPrev)) {
             $activeShift = 'night';
-            $scheduleDate = $nightStartPrev->toDateString();
+            $scheduleDate = $nightEndPrev->toDateString();
 
         } elseif ($now->betweenIncluded($nightStartToday, $nightEndToday)) {
             $activeShift = 'night';
@@ -347,8 +347,8 @@ class SiteUserController extends Controller
             $scheduleDate = $relNightStartToday->toDateString();
         }
 
-        $data = SiteUser::with('attendance')
-            ->where('id_employee', $id)
+        $data = SiteUser::with('site')
+        ->where('id_user', $id)
             ->whereDate('date', $scheduleDate)
             ->orderBy('date', 'asc')
             ->first();
@@ -413,14 +413,14 @@ class SiteUserController extends Controller
         }
 
         $data = SiteUser::with('attendance')
-            ->where('id_employee', $id)
+            ->where('id_user', $id)
             ->whereDate('date', $scheduleDate)
             ->orderBy('date', 'asc')
             ->first();
 
         if ($data) {
             $datas = SiteUser::with('attendance')
-                ->where('id_employee', $id)
+                ->where('id_user', $id)
                 ->where('id', '<>', $data->id)
                 ->where(function ($q) use ($now) {
                     $q->whereDate('date', '<', $now->toDateString())
@@ -434,7 +434,7 @@ class SiteUserController extends Controller
                 ->get();
         } else {
             $datas = SiteUser::with('attendance')
-                ->where('id_employee', $id)
+                ->where('id_user', $id)
                 ->where(function ($q) use ($now) {
                     $q->whereDate('date', '<', $now->toDateString())
                         ->orWhere(function ($q2) use ($now) {

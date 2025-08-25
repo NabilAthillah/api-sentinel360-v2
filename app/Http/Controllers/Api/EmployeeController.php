@@ -19,7 +19,7 @@ class EmployeeController extends Controller
     public function index()
     {
         try {
-            $employees = Employee::with('reporting', 'user', 'user.role')->get();
+            $employees = User::with('role')->get();
 
             return response()->json([
                 'success' => true,

@@ -142,7 +142,7 @@ class EmployeeDocumentController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Something went wrong'
+                'message' => 'Oops! Something went wrong' . $th->getMessage()
             ], 500);
         }
     }

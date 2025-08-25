@@ -283,7 +283,7 @@ class AuthController extends Controller
                 'profile_image' => 'nullable|string',
             ]);
 
-            $user = User::where('id', $id)->first();
+            $user = User::with('role', 'role.permissions')->where('id', $id)->first();
 
             if (!$user) {
                 DB::rollBack();

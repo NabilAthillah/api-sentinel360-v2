@@ -11,6 +11,14 @@ use Illuminate\Support\Facades\Auth;
 
 class RouteController extends Controller
 {
+    public function index()
+    {
+        return response()->json([
+            'success' => true,
+            'data' => Route::all()
+        ]);
+    }
+
     public function update(Request $request, $id)
     {
         try {
@@ -35,19 +43,25 @@ class RouteController extends Controller
 
             $before = [
                 'name' => $route->name,
-                'status' => $route->status
+                'status' => $route->status,
+                'route' => $route->route,
+                'remarks' => $route->remarks ?? ''
             ];
 
             $route->update([
                 'name' => $request->name ?? $route->name,
                 'status' => $request->status ?? $route->status,
+                'route' => $request->route ?? $route->route,
+                'remarks' => $request->remarks ?? $route->remarks
             ]);
 
             DB::commit();
 
             $after = [
                 'name' => $route->name,
-                'status' => $route->status
+                'status' => $route->status,
+                'route' => $request->route,
+                'remarks' => $request->remarks
             ];
 
             $desc = "Data before update:\n";
@@ -97,7 +111,9 @@ class RouteController extends Controller
 
             $route = Route::create([
                 'name' => $request->name,
-                'id_site' => $request->id_site
+                'id_site' => $request->id_site,
+                'route' => $request->route,
+                'remarks' => $request->remarks ? $request->remarks : ''
             ]);
 
             if (!$route) {
@@ -111,7 +127,7 @@ class RouteController extends Controller
 
             AuditLogger::log(
                 "Route created by " . (Auth::user()->email ?? 'Unknown'),
-                "Name: {$route->name}\nSite ID: {$route->id_site}",
+                "Name: {$route->name}\nSite ID: {$route->id_site}\nRoute: {$route->route}\nRemarks: {$route->remarks}",
                 'success',
                 Auth::id(),
                 'create site route'
