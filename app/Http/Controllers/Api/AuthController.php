@@ -21,14 +21,14 @@ class AuthController extends Controller
             DB::beginTransaction();
 
             $request->validate([
-                'email' => ['required', 'email'],
+                'account' => ['required', 'string'],
                 'password' => ['required']
             ]);
 
-            if (!$request->email || !$request->password) {
+            if (!$request->account || !$request->password) {
                 AuditLogger::log(
                     'Login Failed',
-                    'Login attempt with missing email or password.',
+                    'Login attempt with missing account or password.',
                     'error',
                     null,
                     'login'
@@ -36,18 +36,19 @@ class AuthController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Email and password are required'
+                    'message' => 'Account and password are required'
                 ], 401);
             }
 
-            $user = User::with('role', 'role.permissions', 'employee')
-                ->where('email', $request->email)
+            $user = User::with('role', 'role.permissions')
+                ->where('email', $request->account)
+                ->orWhere('mobile', $request->account)
                 ->first();
 
             if (!$user) {
                 AuditLogger::log(
                     'Login Failed',
-                    "Login attempt with invalid email: {$request->email}",
+                    "Login attempt with invalid account: {$request->account}",
                     'error',
                     null,
                     'login'
@@ -55,14 +56,14 @@ class AuthController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Invalid email'
+                    'message' => 'Invalid account'
                 ], 401);
             }
 
             if (!Hash::check($request->password, $user->password)) {
                 AuditLogger::log(
                     'Login Failed',
-                    "Invalid password attempt for email: {$request->email}",
+                    "Invalid password attempt for account: {$request->account}",
                     'error',
                     $user->id,
                     'login'
@@ -74,10 +75,10 @@ class AuthController extends Controller
                 ], 401);
             }
 
-            if (!Auth::attempt($request->only('email', 'password'))) {
+            if (!Auth::attempt(['email' => $user->email, 'password' => $request->password])) {
                 AuditLogger::log(
                     'Login Failed',
-                    "Laravel auth attempt failed for email: {$request->email}",
+                    "Laravel auth attempt failed for account: {$request->account}",
                     'error',
                     $user->id,
                     'login'
@@ -104,9 +105,11 @@ class AuthController extends Controller
                 ], 401);
             }
 
-            if (!$user->last_login) {
+            $user->last_login = Carbon::now();
+
+            if (!$user->first_login) {
                 $user->update([
-                    'last_login' => Carbon::now()
+                    'first_login' => Carbon::now()
                 ]);
             }
 
@@ -125,10 +128,8 @@ class AuthController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Login successful',
-                'data' => [
-                    'user' => $user,
-                    'token' => $token
-                ]
+                'user' => $user,
+                'token' => $token
             ], 200);
         } catch (\Throwable $th) {
             //throw $th;
@@ -267,100 +268,86 @@ class AuthController extends Controller
         }
     }
 
-    public function updateProfile(Request $request)
+    public function updateProfile(Request $request, $id)
     {
         try {
             DB::beginTransaction();
+            //code...
+            $request->validate([
+                'name' => 'required|string',
+                'address' => 'required|string',
+                'mobile' => 'required|string',
+                'email' => 'required|email',
+                'old_password' => 'nullable|string',
+                'new_password' => 'nullable|string',
+                'profile_image' => 'nullable|string',
+            ]);
 
-            $user = User::with('role', 'role.permissions', 'employee')->where('id', $request->id)->first();
+            $user = User::where('id', $id)->first();
 
             if (!$user) {
+                DB::rollBack();
+
                 AuditLogger::log(
-                    'Update Profile Failed',
-                    "User with ID {$request->id} not found.",
+                    'Update profile failed',
+                    "User attempted update profile: {$request->email}",
                     'error',
-                    $request->id,
-                    'update profile'
+                    null,
+                    'profile'
                 );
 
                 return response()->json([
                     'success' => false,
                     'message' => 'User not found'
-                ], 401);
+                ]);
             }
 
             $oldData = $user->only(['name', 'email', 'address', 'mobile', 'profile_image']);
 
-            $pathImage = '';
+            $user->name = $request->name;
+            $user->address = $request->address;
+            $user->mobile = $request->mobile;
+            $user->email = $request->email;
 
-            if ($request->profile) {
+            if ($request->old_password && $request->new_password) {
+                if (Hash::check($request->old_password, $user->password)) {
+                    $user->password = Hash::make($request->new_password);
+                } else {
+                    DB::rollBack();
+
+                    AuditLogger::log(
+                        'Update profile failed',
+                        "User attempted update profile: {$request->email}",
+                        'error',
+                        null,
+                        'profile'
+                    );
+
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Wrong password'
+                    ]);
+                }
+            }
+
+            if ($request->profile_image) {
                 if ($user->profile_image) {
                     Storage::delete($user->profile_image);
                 }
 
-                $image = $request->profile;
+                $image = $request->profile_image;
                 $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $image));
                 $imageName = uniqid() . '.png';
                 Storage::disk('public')->put("users/profile/{$imageName}", $imageData);
                 $pathImage = "users/profile/{$imageName}";
 
-                $user->update([
-                    'profile_image' => $pathImage,
-                ]);
+                $user->profile_image = $pathImage;
             }
 
-            if ($user->email != $request->email) {
-                $exists = User::where('email', $request->email)->first();
-
-                if ($exists) {
-                    AuditLogger::log(
-                        'Update Profile Failed',
-                        "Email {$request->email} is already used by another account.",
-                        'error',
-                        $user->id,
-                        'update profile'
-                    );
-
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Employee with this email already exists'
-                    ], 401);
-                }
-            }
-
-            $user->update([
-                'name' => $request->name,
-                'email' => $request->email,
-                'address' => $request->address,
-                'mobile' => $request->mobile,
-            ]);
-
-            if ($request->old_password) {
-                $valid = Hash::check($request->old_password, $user->password);
-
-                if (!$valid) {
-                    AuditLogger::log(
-                        'Update Password Failed',
-                        "Invalid old password provided by user {$user->email}.",
-                        'error',
-                        $user->id,
-                        'update profile'
-                    );
-
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Invalid old password'
-                    ], 401);
-                }
-
-                $user->update([
-                    'password' => Hash::make($request->new_password)
-                ]);
-            }
+            $user->save();
 
             $newData = $user->only(['name', 'email', 'address', 'mobile', 'profile_image']);
 
-            // Build log description
             $description = "User {$user->email} updated their profile.\n\n";
             $description .= "Data before update:\n";
             foreach ($oldData as $key => $value) {
@@ -390,19 +377,19 @@ class AuthController extends Controller
                 ]
             ], 200);
         } catch (\Throwable $th) {
+            //throw $th;
             DB::rollBack();
-
             AuditLogger::log(
-                'Update Profile Failed',
-                'Exception: ' . $th->getMessage(),
+                'Update profile failed',
+                "User attempted update profile: {$request->email}",
                 'error',
-                $request->id,
-                'update profile'
+                null,
+                'profile'
             );
 
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Something went wrong'
+                'message' => 'Oops! Something went wrong' . $th->getMessage()
             ], 500);
         }
     }

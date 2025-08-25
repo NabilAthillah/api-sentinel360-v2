@@ -44,68 +44,39 @@ Route::middleware('auth:sanctum')->group(function () {
         ]);
     });
 
+    Route::resources([
+        'employees' => EmployeeController::class,
+        'sites' => SiteController::class,
+        'routes' => RouteController::class,
+        'occcurrences' => OccurrenceController::class,
+    ]);
+
+    Route::prefix('master-settings')->name('master-settings.')->group(function () {
+        Route::resources([
+            'roles' => RoleController::class,
+            'permissions' => PermissionController::class,
+            'attendance-settings' => AttendanceSettingController::class,
+            'occurrence-categories' => OccurrenceCategoryController::class,
+            'client-info' => ClientInfoController::class,
+            'employee-documents' => EmployeeDocumentController::class,
+            'incident-types' => IncidentTypeController::class,
+            'sop-documents' => SOPDocumentController::class
+        ]);
+    });
 
     Route::controller(EmployeeController::class)->name('employees.')->prefix('employees')->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::post('/', 'store')->name('store');
-        Route::put('/{id}', 'update')->name('update');
-        Route::post('/delete/{id}', 'destroy')->name('destroy');
         Route::put('/{id}/status', 'updateStatus')->name('updateStatus');
         Route::put('/profile/{id}', 'updateProfile')->name('updateProfile');
     });
 
-    Route::controller(RoleController::class)->name('roles.')->prefix('roles')->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::post('/', 'store')->name('store');
-        Route::put('/{id}', 'update')->name('update');
-    });
-
-    Route::controller(PermissionController::class)->name('permissions.')->prefix('permissions')->group(function () {
-        Route::get('/', 'index')->name('index');
-    });
-
     Route::controller(AuthController::class)->name('auth.')->prefix('auth')->group(function () {
         Route::post('/login', 'login')->name('login')->withoutMiddleware('auth:sanctum');
-        Route::post('/update-profile', 'updateProfile')->name('updateProfile');
+        Route::post('/update-profile/{id}', 'updateProfile')->name('updateProfile');
         Route::post('/user/login', 'loginUser')->name('user.login')->withoutMiddleware('auth:sanctum');
     });
 
-    Route::controller(AttendanceSettingController::class)->name('attendance-settings.')->prefix('attendance-settings')->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::post('/', 'update')->name('update');
-    });
-
     Route::controller(SiteController::class)->name('sites.')->prefix('sites')->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/{id}', 'show')->name('show');
-        Route::post('/', 'store')->name('store');
-        Route::put('/{id}', 'update')->name('update');
         Route::post('/disallocation', 'disallocation')->name('disallocation');
-        Route::post('/{id}', 'destroy')->name('destroy');
-    });
-
-    Route::controller(RouteController::class)->name('routes.')->prefix('routes')->group(function () {
-        Route::post('/', 'store')->name('store');
-        Route::put('/{id}', 'update')->name('update');
-        Route::post('/{id}', 'destroy')->name('destroy');
-    });
-
-    Route::controller(OccurrenceCategoryController::class)->name('occurrence-categories.')->prefix('occurrence-categories')->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::post('/', 'store')->name('store');
-        Route::put('/{id}', 'update')->name('update');
-    });
-
-    Route::controller(OccurrenceController::class)->name('occurrences.')->prefix('occurrences')->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::post('/', 'store')->name('store');
-        Route::put('/{id}', 'update')->name('update');
-        Route::delete('/{id}', 'destroy')->name('destroy');
-    });
-
-    Route::controller(ClientInfoController::class)->name('client-info.')->prefix('client-info')->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::put('/{id}', 'update')->name('update');
     });
 
     Route::controller(SiteUserController::class)->name('site-user.')->prefix('site-user')->group(function () {
@@ -117,25 +88,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/user/nearest/{id}', 'nearest')->name('nearest')->withoutMiddleware('auth:sanctum');
         Route::get('/user/data/{id}', 'data')->name('data')->withoutMiddleware('auth:sanctum');
-    });
-
-    Route::controller(EmployeeDocumentController::class)->name('employee-documents.')->prefix('employee-documents')->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::put('/{id}', 'update')->name('update');
-        Route::post('/', 'store')->name('store');
-    });
-
-    Route::controller(IncidentTypeController::class)->name('incident-types.')->prefix('incident-types')->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::put('/{id}', 'update')->name('update');
-        Route::post('/', 'store')->name('store');
-    });
-
-    Route::controller(SOPDocumentController::class)->name('sop-documents.')->prefix('sop-documents')->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::put('/{id}', 'update')->name('update');
-        Route::post('/', 'store')->name('store');
-        Route::post('/{id}', 'destroy')->name('destroy');
     });
 
     Route::controller(EmployeeDocumentPivotController::class)->name('employee-document.')->prefix('employee-document')->group(function () {
@@ -162,7 +114,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}', 'update')->name('update');
     });
 
-   Route::controller(LanguageController::class)->name('language.')->prefix('language')->group(function () {
+    Route::controller(LanguageController::class)->name('language.')->prefix('language')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::put('/{id}', 'update')->name('update');
     });

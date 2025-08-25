@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('employee_document', function (Blueprint $table) {
             $table->uuid('id')->primary()->unique();
-            $table->string('id_employee');
-            $table->foreign('id_employee')->references('id')->on('employees');
+            $table->string('id_user');
+            $table->foreign('id_user')->references('id')->on('users');
             $table->string('id_document');
             $table->foreign('id_document')->references('id')->on('employee_documents');
             $table->string('path');

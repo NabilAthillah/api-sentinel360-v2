@@ -14,14 +14,37 @@ return new class extends Migration {
         Schema::create('users', function (Blueprint $table) {
             $table->uuid('id')->primary()->unique();
             $table->string('name');
-            $table->string('mobile')->nullable();
-            $table->string('address')->nullable();
-            $table->string('profile_image')->nullable();
-            $table->dateTimeTz('last_login')->nullable();
-            $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');
             $table->string('email')->unique();
+            $table->string('nric_fin_no');
+            $table->string('mobile');
+            $table->string('address');
+            $table->date('briefing_date');
+            $table->date('date_joined');
+            $table->boolean('briefing_conducted');
+            $table->boolean('q1');
+            $table->string('a1');
+            $table->boolean('q2');
+            $table->string('a2');
+            $table->boolean('q3');
+            $table->string('a3');
+            $table->boolean('q4');
+            $table->string('a4');
+            $table->boolean('q5');
+            $table->string('a5');
+            $table->boolean('q6');
+            $table->string('a6');
+            $table->boolean('q7');
+            $table->string('a7');
+            $table->boolean('q8');
+            $table->string('a8');
+            $table->boolean('q9');
+            $table->string('a9');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->enum('status', ['active', 'inactive', 'suspended']);
+            $table->string('profile_image')->nullable();
+            $table->dateTime('first_login')->nullable();
+            $table->dateTime('last_login')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
@@ -33,8 +56,9 @@ return new class extends Migration {
         });
 
         Schema::create('sessions', function (Blueprint $table) {
-            $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
+            $table->uuid('id')->primary()->unique();
+            $table->string('user_id')->nullable()->index();
+            $table->foreign('user_id')->references('id')->on('users');
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->longText('payload');

@@ -8,26 +8,26 @@ class CreateIncidentTable extends Migration
     public function up()
     {
         Schema::create('incidents', function (Blueprint $table) {
-            $table->uuid('id')->primary()->unique();  // UUID untuk id yang unik
-            $table->uuid('site_id');  // Relasi dengan site_user
-            $table->uuid('incident_type_id');  // Relasi dengan incident_types
-            $table->string('what_happened')->nullable();  // Deskripsi insiden
-            $table->string('where_happened')->nullable();  // Lokasi insiden
-            $table->string('why_happened')->nullable();  // Mengapa insiden terjadi
-            $table->string('how_happened')->nullable();  // Bagaimana insiden terjadi
-            $table->string('persons_involved')->nullable();  // Orang yang terlibat
-            $table->string('persons_injured')->nullable();  // Orang yang terluka
-            $table->dateTime('happened_at')->nullable();  // Waktu insiden terjadi
-            $table->text('details')->nullable();  // Detail kejadian insiden
-            $table->string('ops_incharge')->nullable();  // Penanggung jawab
-            $table->boolean('reported_to_management')->default(false);  // Apakah laporan ke manajemen
-            $table->string('management_report_note')->nullable();  // Catatan laporan manajemen
-            $table->boolean('reported_to_police')->default(false);  // Apakah laporan ke polisi
-            $table->string('police_report_note')->nullable();  // Catatan laporan polisi
-            $table->boolean('property_damaged')->default(false);  // Apakah ada kerusakan properti
-            $table->string('damage_note')->nullable();  // Catatan kerusakan properti
-            $table->string('image')->nullable();  // Gambar insiden dalam format base64 (CCTV footage)
-            $table->timestamps();  // Timestamps untuk created_at dan updated_at
+            $table->uuid('id')->primary()->unique();
+            $table->string('person_involved');
+            $table->string('how_it_happened');
+            $table->date('incident_date');
+            $table->date('reported_date');
+            $table->string('conclution');
+            $table->boolean('reported_to_management');
+            $table->boolean('reported_to_police');
+            $table->boolean('any_damages_to_property');
+            $table->boolean('any_pictures_attached');
+            $table->boolean('cctv_footage');
+            $table->string('picture');
+            $table->string('footage');
+            $table->string('id_incident_type');
+            $table->foreign('id_incident_type')->references('id')->on('incident_types');
+            $table->string('id_site');
+            $table->foreign('id_site')->references('id')->on('sites');
+            $table->string('id_user');
+            $table->foreign('id_user')->references('id')->on('users');
+            $table->timestamps();
         });
     }
 

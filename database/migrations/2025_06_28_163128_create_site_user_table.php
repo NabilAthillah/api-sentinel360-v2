@@ -12,8 +12,8 @@ return new class extends Migration {
     {
         Schema::create('site_user', function (Blueprint $table) {
             $table->uuid('id')->primary()->unique();
-            $table->string('id_employee');
-            $table->foreign('id_employee')->references('id')->on('employees');
+            $table->string('id_user');
+            $table->foreign('id_user')->references('id')->on('users');
             $table->string('id_site');
             $table->foreign('id_site')->references('id')->on('sites');
 

@@ -270,18 +270,32 @@ class DataSeeder extends Seeder
             'id' => $user_id,
             'name' => 'Admin User',
             'email' => 'admin@sentinel360.com',
+            'nric_fin_no' => '111111',
+            'mobile' => '+1234567890',
+            'address' => 'Singapore',
+            'briefing_date' => Carbon::now(),
+            'date_joined' => Carbon::now(),
+            'briefing_conducted' => true,
+            'q1' => true,
+            'a1' => '',
+            'q2' => true,
+            'a2' => '',
+            'q3' => true,
+            'a3' => '',
+            'q4' => true,
+            'a4' => '',
+            'q5' => true,
+            'a5' => '',
+            'q6' => true,
+            'a6' => '',
+            'q7' => true,
+            'a7' => '',
+            'q8' => true,
+            'a8' => '',
+            'q9' => true,
+            'a9' => '',
             'password' => Hash::make('admin123'),
             'id_role' => $role->id,
-            'mobile' => '+1234567890',
-        ]);
-
-        $employee_id = Uuid::uuid4();
-
-        Employee::create([
-            'id' => $employee_id,
-            'nric_fin_no' => '111111',
-            'briefing_date' => Carbon::now(),
-            'id_user' => $user_id,
         ]);
 
         ClientInfo::create([
