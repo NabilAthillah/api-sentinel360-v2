@@ -49,6 +49,10 @@ Route::middleware('auth:sanctum')->group(function () {
         'sites' => SiteController::class,
         'routes' => RouteController::class,
         'occcurrences' => OccurrenceController::class,
+        'audit-trails' => AuditTrailsController::class,
+        'languages' => LanguageController::class,
+        'employee-document' => EmployeeDocumentPivotController::class,
+        'incidents' => IncidentController::class
     ]);
 
     Route::prefix('master-settings')->name('master-settings.')->group(function () {
@@ -60,7 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
             'client-info' => ClientInfoController::class,
             'employee-documents' => EmployeeDocumentController::class,
             'incident-types' => IncidentTypeController::class,
-            'sop-documents' => SOPDocumentController::class
+            'sop-documents' => SOPDocumentController::class,
         ]);
     });
 
@@ -88,24 +92,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/user/nearest/{id}', 'nearest')->name('nearest')->withoutMiddleware('auth:sanctum');
         Route::get('/user/data/{id}', 'data')->name('data')->withoutMiddleware('auth:sanctum');
-    });
-
-    Route::controller(EmployeeDocumentPivotController::class)->name('employee-document.')->prefix('employee-document')->group(function () {
-        Route::post('/', 'store')->name('store');
-        Route::get('/{id}', 'index')->name('index');
-    });
-
-    Route::controller(IncidentController::class)->name('incidents.')->prefix('incidents')->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/{id}', 'show')->name('show');
-        Route::post('/', 'store')->name('store');
-        Route::put('/{id}', 'update')->name('update');
-        Route::delete('/{id}', 'destroy')->name('destroy');
-    });
-
-    Route::controller(AuditTrailsController::class)->name('audit-trails.')->prefix('audit-trails')->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::post('/', 'store')->name('store');
     });
 
     Route::controller(AttendanceController::class)->name('attendances.')->prefix('attendances')->group(function () {
