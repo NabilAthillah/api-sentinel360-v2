@@ -155,6 +155,55 @@ class RouteController extends Controller
         }
     }
 
+    public function show($id)
+    {
+        try {
+            $route = Route::find($id);
+
+            if (!$route) {
+                AuditLogger::log(
+                    "Failed to fetch route",
+                    "Route with ID $id not found",
+                    'error',
+                    Auth::id(),
+                    'show site route'
+                );
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Route not found'
+                ], 404);
+            }
+
+            AuditLogger::log(
+                "Route viewed by " . (Auth::user()->email ?? 'Unknown'),
+                "Route ID: {$route->id}, Name: {$route->name}, Site ID: {$route->id_site}",
+                'success',
+                Auth::id(),
+                'show site route'
+            );
+
+            return response()->json([
+                'success' => true,
+                'data' => $route
+            ], 200);
+        } catch (\Throwable $th) {
+            AuditLogger::log(
+                "Failed to fetch route",
+                "Error: {$th->getMessage()}",
+                'error',
+                Auth::id(),
+                'show site route'
+            );
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Oops! Something went wrong'
+            ], 500);
+        }
+    }
+
+
 
     public function destroy($id)
     {

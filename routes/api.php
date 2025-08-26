@@ -104,4 +104,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::put('/{id}', 'update')->name('update');
     });
+
+    Route::controller(RouteController::class)->name('route.')->prefix('route')->group(function() {
+        Route::get('/{id}', 'show')->name('show');
+    });
 });
