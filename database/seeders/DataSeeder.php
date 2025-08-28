@@ -236,11 +236,11 @@ class DataSeeder extends Seeder
             ],
             [
                 'name' => 'list_reports',
-                'category' => 'report'
+                'category' => 'Report'
             ],
             [
                 'name' => 'list_audit_trails',
-                'category' => 'audit_trails'
+                'category' => 'Audit Trail'
             ],
         ];
 

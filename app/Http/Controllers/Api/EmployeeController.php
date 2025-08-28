@@ -76,30 +76,9 @@ class EmployeeController extends Controller
                 'status' => 'inactive',
                 'email' => $request->email,
                 'password' => Hash::make($request->name),
-                'id_role' => $request->id_role
-            ]);
-
-            if (!$user) {
-                AuditLogger::log(
-                    "Failed to create user record",
-                    "Error occurred while creating user: {$request->email}",
-                    'error',
-                    $request->user()->id ?? null,
-                    'create employee'
-                );
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Oops! Something went wrong'
-                ], 500);
-            }
-
-            Employee::create([
+                'id_role' => $request->id_role,
                 'nric_fin_no' => $request->nric_fin_no,
                 'briefing_date' => $request->briefing_date,
-                'id_user' => $user_id,
-                'reporting_to' => $request->reporting_to,
-                'birth' => $request->birth,
                 'briefing_conducted' => $request->briefing_conducted,
                 'date_joined' => $request->date_joined,
                 'q1' => $request->q1,
@@ -120,8 +99,22 @@ class EmployeeController extends Controller
                 'a8' => $request->a8,
                 'q9' => $request->q9,
                 'a9' => $request->a9,
-                'status' => 'pending'
             ]);
+
+            if (!$user) {
+                AuditLogger::log(
+                    "Failed to create user record",
+                    "Error occurred while creating user: {$request->email}",
+                    'error',
+                    $request->user()->id ?? null,
+                    'create employee'
+                );
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Oops! Something went wrong'
+                ], 500);
+            }
 
             DB::commit();
 
@@ -186,7 +179,7 @@ class EmployeeController extends Controller
         try {
             DB::beginTransaction();
 
-            $employee = Employee::where('id', $id)->first();
+            $employee = User::where('id', $id)->first();
             if (!$employee) {
                 AuditLogger::log(
                     "Failed to update employee",
@@ -202,23 +195,7 @@ class EmployeeController extends Controller
                 ], 404);
             }
 
-            $user = User::where('id', $employee->id_user)->first();
-            if (!$user) {
-                AuditLogger::log(
-                    "Failed to update employee",
-                    "Related user not found for employee ID $id",
-                    'error',
-                    $request->user()->id ?? null,
-                    'update employee'
-                );
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User not found'
-                ], 404);
-            }
-
-            $existingUser = User::where('email', $request->email)->where('id', '!=', $user->id)->first();
+            $existingUser = User::where('email', $request->email)->where('id', '!=', $employee->id)->first();
             if ($existingUser) {
                 AuditLogger::log(
                     "Email conflict on employee update",
@@ -234,21 +211,23 @@ class EmployeeController extends Controller
                 ], 409);
             }
 
-            $originalUser = $user->replicate();
-            $originalEmployee = $employee->replicate();
+            $originalUser = $employee->replicate();
 
-            $user->update([
+            $employee->update([
                 'name' => $request->name,
+                'nric_fin_no' => $request->nric_fin_no,
                 'mobile' => $request->mobile,
-                'address' => $request->address,
-                'status' => 'inactive',
                 'email' => $request->email,
-                'id_role' => $request->id_role
+                'address' => $request->address,
+                'id_role' => $request->id_role,
+                'briefing_date' => $request->briefing_date,
+                'date_joined' => $request->date_joined,
+                'briefing_conducted' => $request->briefing_conducted,
             ]);
 
             if ($request->profile) {
-                if ($user->profile_image && Storage::disk('public')->exists($user->profile_image)) {
-                    Storage::disk('public')->delete($user->profile_image);
+                if ($employee->profile_image && Storage::disk('public')->exists($employee->profile_image)) {
+                    Storage::disk('public')->delete($employee->profile_image);
                 }
 
                 $image = $request->profile;
@@ -278,7 +257,7 @@ class EmployeeController extends Controller
                     $pathImage = "users/profile/{$imageName}";
                     Storage::disk('public')->put($pathImage, $imageData);
 
-                    $user->update(['profile_image' => $pathImage]);
+                    $employee->update(['profile_image' => $pathImage]);
                 } else {
                     return response()->json([
                         'success' => false,
@@ -286,34 +265,6 @@ class EmployeeController extends Controller
                     ], 400);
                 }
             }
-
-            // ✅ Lakukan update pada Employee
-            $employee->update([
-                'nric_fin_no' => $request->nric_fin_no,
-                'briefing_date' => $request->briefing_date,
-                'reporting_to' => $request->reporting_to,
-                'birth' => $request->birth,
-                'briefing_conducted' => $request->briefing_conducted,
-                'date_joined' => $request->date_joined,
-                'q1' => $request->q1,
-                'a1' => $request->a1,
-                'q2' => $request->q2,
-                'a2' => $request->a2,
-                'q3' => $request->q3,
-                'a3' => $request->a3,
-                'q4' => $request->q4,
-                'a4' => $request->a4,
-                'q5' => $request->q5,
-                'a5' => $request->a5,
-                'q6' => $request->q6,
-                'a6' => $request->a6,
-                'q7' => $request->q7,
-                'a7' => $request->a7,
-                'q8' => $request->q8,
-                'a8' => $request->a8,
-                'q9' => $request->q9,
-                'a9' => $request->a9,
-            ]);
 
             DB::commit();
 
@@ -325,45 +276,23 @@ class EmployeeController extends Controller
             $description .= "Address: {$originalUser->address}\n";
             $description .= "Role ID: {$originalUser->id_role}\n\n";
             $description .= "NRIC/FIN No: {$request->nric_fin_no}\n";
-            $description .= "Birth Date: {$request->birth}\n";
             $description .= "Briefing Date: {$request->briefing_date}\n";
             $description .= "Briefing Conducted: {$request->briefing_conducted}\n";
             $description .= "Date Joined: {$request->date_joined}\n";
-            $description .= "Reporting To: {$request->reporting_to}\n";
-            $description .= "Q1: {$request->q1} | A1: {$request->a1}\n";
-            $description .= "Q2: {$request->q2} | A2: {$request->a2}\n";
-            $description .= "Q3: {$request->q3} | A3: {$request->a3}\n";
-            $description .= "Q4: {$request->q4} | A4: {$request->a4}\n";
-            $description .= "Q5: {$request->q5} | A5: {$request->a5}\n";
-            $description .= "Q6: {$request->q6} | A6: {$request->a6}\n";
-            $description .= "Q7: {$request->q7} | A7: {$request->a7}\n";
-            $description .= "Q8: {$request->q8} | A8: {$request->a8}\n";
-            $description .= "Q9: {$request->q9} | A9: {$request->a9}\n";
 
             $description .= "Data after updated:\n";
-            $description .= "Name: {$user->name}\n";
-            $description .= "Email: {$user->email}\n";
-            $description .= "Mobile: {$user->mobile}\n";
-            $description .= "Address: {$user->address}\n";
-            $description .= "Role ID: {$user->id_role}\n";
+            $description .= "Name: {$request->name}\n";
+            $description .= "Email: {$request->email}\n";
+            $description .= "Mobile: {$request->mobile}\n";
+            $description .= "Address: {$request->address}\n";
+            $description .= "Role ID: {$request->id_role}\n";
             $description .= "NRIC/FIN No: {$request->nric_fin_no}\n";
-            $description .= "Birth Date: {$request->birth}\n";
             $description .= "Briefing Date: {$request->briefing_date}\n";
             $description .= "Briefing Conducted: {$request->briefing_conducted}\n";
             $description .= "Date Joined: {$request->date_joined}\n";
-            $description .= "Reporting To: {$request->reporting_to}\n";
-            $description .= "Q1: {$request->q1} | A1: {$request->a1}\n";
-            $description .= "Q2: {$request->q2} | A2: {$request->a2}\n";
-            $description .= "Q3: {$request->q3} | A3: {$request->a3}\n";
-            $description .= "Q4: {$request->q4} | A4: {$request->a4}\n";
-            $description .= "Q5: {$request->q5} | A5: {$request->a5}\n";
-            $description .= "Q6: {$request->q6} | A6: {$request->a6}\n";
-            $description .= "Q7: {$request->q7} | A7: {$request->a7}\n";
-            $description .= "Q8: {$request->q8} | A8: {$request->a8}\n";
-            $description .= "Q9: {$request->q9} | A9: {$request->a9}\n";
 
             AuditLogger::log(
-                "{$request->user()->email} updated employee {$user->name}",
+                "{$request->user()->email} updated employee {$request->name}",
                 $description,
                 'success',
                 $request->user()->id ?? null,
@@ -399,7 +328,7 @@ class EmployeeController extends Controller
         DB::beginTransaction();
 
         try {
-            $employee = Employee::with('user')->find($id);
+            $employee = User::find($id);
 
             if (!$employee) {
                 AuditLogger::log(
@@ -427,12 +356,9 @@ class EmployeeController extends Controller
             $oldStatus = $employee->status;
 
             if ($request->status === 'rejected') {
-                $employeeName = $employee->user->name ?? 'Unknown';
+                $employeeName = $employee->name ?? 'Unknown';
 
                 $employee->delete();
-                if ($employee->user) {
-                    $employee->user->delete();
-                }
 
                 DB::commit();
 
@@ -450,11 +376,8 @@ class EmployeeController extends Controller
                 ], 200);
             }
 
-            // Update status for 'pending' or 'accepted'
-            $employee->update(['status' => $request->status]);
-
-            if ($request->status === 'accepted' && $employee->user) {
-                $employee->user->update(['status' => 'active']);
+            if ($request->status === 'accepted') {
+                $employee->update(['status' => 'active']);
             }
 
             DB::commit();
@@ -495,7 +418,7 @@ class EmployeeController extends Controller
         try {
             DB::beginTransaction();
 
-            $employee = Employee::with('user')->find($id);
+            $employee = User::find($id);
 
             if (!$employee) {
                 AuditLogger::log(
@@ -512,15 +435,10 @@ class EmployeeController extends Controller
                 ], 404);
             }
 
-            $user = $employee->user;
-
-            $employeeName = $user->name ?? 'Unknown';
-            $employeeEmail = $user->email ?? 'Unknown';
+            $employeeName = $employee->name;
+            $employeeEmail = $employee->email;
 
             $employee->delete();
-            if ($user) {
-                $user->delete();
-            }
 
             DB::commit();
 
@@ -536,7 +454,7 @@ class EmployeeController extends Controller
                 'success' => true,
                 'message' => 'Employee deleted successfully',
                 'data' => [
-                    'user' => $user,
+                    'user' => $employee,
                 ]
             ], 200);
         } catch (\Throwable $th) {

@@ -47,7 +47,7 @@ class OccurrenceController extends Controller
 
             Occurrence::insert($data);
             DB::commit();
-            
+
             $logDescription = "User: {$userEmail} (ID: {$userId}) created " . count($data) . " occurrence(s):\n";
 
             foreach ($data as $index => $item) {
@@ -86,6 +86,77 @@ class OccurrenceController extends Controller
             ], 500);
         }
     }
+
+    public function update(Request $request, $id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $userId = Auth::id();
+            $userEmail = Auth::user()->email ?? 'Unknown';
+
+            // Validasi data
+            $request->validate([
+                'id_site' => 'required|exists:sites,id',
+                'id_category' => 'required|exists:occurrence_category,id',
+                'occurred_at' => 'required|date_format:Y-m-d\TH:i:s',
+                'detail' => 'nullable|string',
+            ]);
+
+            $occurrence = Occurrence::findOrFail($id);
+
+            // Convert datetime
+            $dt = Carbon::createFromFormat('Y-m-d\TH:i:s', $request->occurred_at);
+
+            $occurrence->update([
+                'id_site' => $request->id_site,
+                'id_category' => $request->id_category,
+                'date' => $dt->toDateString(),
+                'time' => $dt->toTimeString(),
+                'detail' => $request->detail,
+                'updated_at' => now(),
+            ]);
+
+            DB::commit();
+
+            // Logging
+            $logDescription = "User: {$userEmail} (ID: {$userId}) updated occurrence (ID: {$id}):\n";
+            foreach ($occurrence->toArray() as $key => $value) {
+                $logDescription .= ucfirst($key) . ": " . $value . "\n";
+            }
+
+            AuditLogger::log(
+                "Occurrence updated by {$userEmail}",
+                $logDescription,
+                'success',
+                $userId,
+                'update occurrence'
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Occurrence updated successfully',
+                'data' => $occurrence
+            ], 200);
+
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            AuditLogger::log(
+                "Failed to update occurrence",
+                "Error: " . $th->getMessage(),
+                'error',
+                Auth::id(),
+                'update occurrence'
+            );
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Oops! Something went wrong. ' . $th->getMessage(),
+            ], 500);
+        }
+    }
+
 
     public function destroy($id)
     {

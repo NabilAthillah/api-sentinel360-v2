@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\IncidentTypeController;
 use App\Http\Controllers\Api\OccurrenceCategoryController;
 use App\Http\Controllers\Api\OccurrenceController;
 use App\Http\Controllers\Api\PermissionController;
+use App\Http\Controllers\Api\PointerController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\RouteController;
 use App\Http\Controllers\Api\SiteController;
@@ -48,11 +49,12 @@ Route::middleware('auth:sanctum')->group(function () {
         'employees' => EmployeeController::class,
         'sites' => SiteController::class,
         'routes' => RouteController::class,
-        'occcurrences' => OccurrenceController::class,
+        'occurrences' => OccurrenceController::class,
         'audit-trails' => AuditTrailsController::class,
         'languages' => LanguageController::class,
         'employee-document' => EmployeeDocumentPivotController::class,
-        'incidents' => IncidentController::class
+        'incidents' => IncidentController::class,
+        'pointers' => PointerController::class
     ]);
 
     Route::prefix('master-settings')->name('master-settings.')->group(function () {
