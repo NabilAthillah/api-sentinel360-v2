@@ -19,4 +19,9 @@ class Pointer extends Model
     {
         return $this->belongsTo(Route::class, 'id_route', 'id');
     }
+
+    public function site()
+    {
+        return $this->belongsTo(Site::class, 'id_site', 'id');
+    }
 }

@@ -12,10 +12,13 @@ return new class extends Migration {
     {
         Schema::create('pointers', function (Blueprint $table) {
             $table->uuid('id')->primary()->unique();
-            $table->string('nfc_tag')->unique();
+            $table->string('nfc_tag');
             $table->string('remarks')->nullable();
+            $table->enum('status', ['incomplete', 'complete', 'to do'])->default('to do');
             $table->string('id_route');
             $table->foreign('id_route')->references('id')->on('routes');
+            $table->string('id_site');
+            $table->foreign('id_site')->references('id')->on('sites');
             $table->timestamps();
         });
     }

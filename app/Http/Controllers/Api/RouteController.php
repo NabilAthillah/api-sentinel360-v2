@@ -158,7 +158,7 @@ class RouteController extends Controller
     public function show($id)
     {
         try {
-            $route = Route::find($id);
+            $route = Route::with('pointers')->find($id);
 
             if (!$route) {
                 AuditLogger::log(

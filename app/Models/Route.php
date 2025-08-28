@@ -19,4 +19,9 @@ class Route extends Model
     {
         return $this->belongsTo(Site::class, 'id_site', 'id');
     }
+
+    public function pointers()
+    {
+        return $this->hasMany(Pointer::class, 'id_route', 'id');
+    }
 }
