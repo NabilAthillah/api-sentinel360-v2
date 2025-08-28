@@ -22,7 +22,7 @@ class PermissionController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Oops! Something went wrong'
-            ]. 500);
+            ], 500);
         }
     }
 }

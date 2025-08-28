@@ -33,6 +33,12 @@ class RoleController extends Controller
 
     public function store(Request $request)
     {
+        $request->validate([
+            'name' => 'required|string|max:255|unique:roles,name',
+            'permissions' => 'required|array',
+            'permissions.*' => 'exists:permissions,id',
+        ]);
+
         try {
             DB::beginTransaction();
 
@@ -41,16 +47,17 @@ class RoleController extends Controller
             ]);
 
             foreach ($request->permissions as $item) {
+                $permissionId = is_array($item) ? $item['id'] : $item;
                 RolePermission::create([
                     'id_role' => $role->id,
-                    'id_permission' => $item
+                    'id_permission' => $permissionId
                 ]);
             }
 
             DB::commit();
+
             $userEmail = Auth::user()->email ?? 'Unknown';
             $userId = Auth::id();
-
             $permissionsList = implode(', ', $request->permissions);
 
             AuditLogger::log(
@@ -65,7 +72,7 @@ class RoleController extends Controller
                 'success' => true,
                 'message' => 'Role created successfully',
                 'data' => $role
-            ], 200);
+            ], 201);
         } catch (\Throwable $th) {
             DB::rollBack();
 
@@ -79,10 +86,12 @@ class RoleController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Something went wrong'
+                'message' => 'Oops! Something went wrong',
+                'error' => $th->getMessage()
             ], 500);
         }
     }
+
 
 
     public function update(Request $request, $id)
