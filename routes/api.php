@@ -54,7 +54,8 @@ Route::middleware('auth:sanctum')->group(function () {
         'languages' => LanguageController::class,
         'employee-document' => EmployeeDocumentPivotController::class,
         'incidents' => IncidentController::class,
-        'pointers' => PointerController::class
+        'pointers' => PointerController::class,
+        'attendances' => AttendanceController::class
     ]);
 
     Route::prefix('master-settings')->name('master-settings.')->group(function () {
@@ -69,6 +70,11 @@ Route::middleware('auth:sanctum')->group(function () {
             'sop-documents' => SOPDocumentController::class,
         ]);
     });
+
+    Route::get('/pointers/route/{id}', [PointerController::class, 'getPointersByRoute'])->name('pointers.get.route');
+
+    Route::post('/attendances/check-in', [AttendanceController::class, 'checkIn']);
+    Route::post('/attendances/check-out', [AttendanceController::class, 'checkOut']);
 
     Route::controller(EmployeeController::class)->name('employees.')->prefix('employees')->group(function () {
         Route::put('/{id}/status', 'updateStatus')->name('updateStatus');
@@ -107,7 +113,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}', 'update')->name('update');
     });
 
-    Route::controller(RouteController::class)->name('route.')->prefix('route')->group(function() {
+    Route::controller(RouteController::class)->name('route.')->prefix('route')->group(function () {
         Route::get('/{id}', 'show')->name('show');
     });
 });

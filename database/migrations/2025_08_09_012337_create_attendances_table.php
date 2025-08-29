@@ -13,8 +13,10 @@ return new class extends Migration
     {
         Schema::create('attendances', function (Blueprint $table) {
             $table->uuid('id')->primary()->unique();
-            $table->string('id_site_employee');
-            $table->foreign('id_site_employee')->references('id')->on('site_user');
+            $table->string('id_site');
+            $table->foreign('id_site')->references('id')->on('sites');
+            $table->string('id_user');
+            $table->foreign('id_user')->references('id')->on('users');
             $table->time('time_in')->nullable();
             $table->time('time_out')->nullable();
             $table->string('reason')->nullable();

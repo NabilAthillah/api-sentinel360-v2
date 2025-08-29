@@ -112,7 +112,6 @@ class RouteController extends Controller
             $route = Route::create([
                 'name' => $request->name,
                 'id_site' => $request->id_site,
-                'route' => $request->route,
                 'remarks' => $request->remarks ? $request->remarks : ''
             ]);
 
@@ -127,7 +126,7 @@ class RouteController extends Controller
 
             AuditLogger::log(
                 "Route created by " . (Auth::user()->email ?? 'Unknown'),
-                "Name: {$route->name}\nSite ID: {$route->id_site}\nRoute: {$route->route}\nRemarks: {$route->remarks}",
+                "Name: {$route->name}\nSite ID: {$route->id_site}\nRemarks: {$route->remarks}",
                 'success',
                 Auth::id(),
                 'create site route'

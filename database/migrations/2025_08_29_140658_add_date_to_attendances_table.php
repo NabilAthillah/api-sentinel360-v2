@@ -12,8 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('attendances', function (Blueprint $table) {
-            $table->dropForeign('attendances_id_site_employee_foreign');
-            $table->dropColumn('id_site_employee');
+            $table->date('date');
         });
     }
 
@@ -23,8 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('attendances', function (Blueprint $table) {
-            $table->string('id_site_employee')->nullable();
-            $table->foreign('id_site_employee')->references('id')->on('site_user');
+            //
         });
     }
 };

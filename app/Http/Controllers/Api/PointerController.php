@@ -11,12 +11,11 @@ use Illuminate\Support\Facades\Auth;
 
 class PointerController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
         return response()->json([
             'success' => true,
-            'data' => Pointer::where('id_site', $request->id_site)->get(),
-            'id' => $request->id_site
+            'data' => Pointer::with('route')->get(),
         ]);
     }
 
@@ -25,11 +24,15 @@ class PointerController extends Controller
         try {
             //code...
             $validated = $request->validate([
+                'name' => 'required|string',
                 'nfc_tag' => 'required|string',
                 'id_route' => 'required|string',
-                'id_site' => 'required|string',
-                'remarks' => 'nullable|string'
+                'remarks' => 'nullable|string',
             ]);
+
+            $lastOrder = Pointer::where('id_route', $validated['id_route'])->max('order');
+
+            $validated['order'] = $lastOrder ? $lastOrder + 1 : 1;
 
             $pointer = Pointer::create($validated);
 
@@ -56,8 +59,8 @@ class PointerController extends Controller
         ]);
     }
 
-        public function update(Request $request, $id)
-        {
+    public function update(Request $request, $id)
+    {
         try {
             DB::beginTransaction();
 
@@ -79,17 +82,16 @@ class PointerController extends Controller
 
             $before = [
                 'id_route' => $pointer->id_route,
-                'id_site'  => $pointer->id_site,
-                'nfc_tag'  => $pointer->nfc_tag,
-                'remarks'  => $pointer->remarks ?? '',
-                'status'   => $pointer->status ?? '',
+                'name' => $pointer->name,
+                'nfc_tag' => $pointer->nfc_tag,
+                'remarks' => $pointer->remarks ?? '',
             ];
 
             $validated = $request->validate([
                 'id_route' => ['required', 'uuid', 'exists:routes,id'],
-                'id_site'  => ['required', 'uuid', 'exists:sites,id'],
-                'nfc_tag'  => ['required', 'string', 'max:191'],
-                'remarks'  => ['nullable', 'string', 'max:1000'],
+                'name' => ['required', 'string'],
+                'nfc_tag' => ['required', 'string', 'max:191'],
+                'remarks' => ['nullable', 'string', 'max:1000'],
             ]);
 
             $pointer->fill($validated);
@@ -99,16 +101,17 @@ class PointerController extends Controller
 
             $after = [
                 'id_route' => $pointer->id_route,
-                'id_site'  => $pointer->id_site,
-                'nfc_tag'  => $pointer->nfc_tag,
-                'remarks'  => $pointer->remarks ?? '',
-                'status'   => $pointer->status ?? '',
+                'id_site' => $pointer->id_site,
+                'nfc_tag' => $pointer->nfc_tag,
+                'remarks' => $pointer->remarks ?? '',
             ];
 
-            $desc  = "Data before update:\n";
-            foreach ($before as $k => $v) $desc .= ucfirst($k) . ": " . (is_scalar($v) ? $v : json_encode($v)) . "\n";
+            $desc = "Data before update:\n";
+            foreach ($before as $k => $v)
+                $desc .= ucfirst($k) . ": " . (is_scalar($v) ? $v : json_encode($v)) . "\n";
             $desc .= "\nData after update:\n";
-            foreach ($after as $k => $v) $desc .= ucfirst($k) . ": " . (is_scalar($v) ? $v : json_encode($v)) . "\n";
+            foreach ($after as $k => $v)
+                $desc .= ucfirst($k) . ": " . (is_scalar($v) ? $v : json_encode($v)) . "\n";
 
             AuditLogger::log(
                 "Pointer updated by " . (Auth::user()->email ?? 'Unknown'),
@@ -121,7 +124,7 @@ class PointerController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Pointer updated successfully',
-                'data'    => $pointer
+                'data' => $pointer
             ], 200);
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -196,5 +199,14 @@ class PointerController extends Controller
                 'message' => 'Oops! Something went wrong' . $th->getMessage()
             ], 500);
         }
+    }
+
+    public function getPointersByRoute($id)
+    {
+        $data = Pointer::with('route')->where('id_route', $id)->orderBy('order')->get();
+        return response()->json([
+            'success' => true,
+            'data' => $data ?? [],
+        ]);
     }
 }

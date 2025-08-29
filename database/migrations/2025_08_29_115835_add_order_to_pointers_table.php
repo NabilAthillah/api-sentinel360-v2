@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('routes', function (Blueprint $table) {
-            $table->string('route')->nullable();
-            $table->string('remarks')->nullable();
+        Schema::table('pointers', function (Blueprint $table) {
+            $table->integer('order');
         });
     }
 
@@ -22,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('routes', function (Blueprint $table) {
+        Schema::table('pointers', function (Blueprint $table) {
             //
         });
     }

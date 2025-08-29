@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('routes', function (Blueprint $table) {
-            $table->string('route')->nullable();
-            $table->string('remarks')->nullable();
+        Schema::table('attendances', function (Blueprint $table) {
+            $table->enum('shift', ['day', 'night', 'relief day', 'relief night']);
         });
     }
 
@@ -22,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('routes', function (Blueprint $table) {
+        Schema::table('attendances', function (Blueprint $table) {
             //
         });
     }
