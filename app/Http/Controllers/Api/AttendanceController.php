@@ -45,40 +45,108 @@ class AttendanceController extends Controller
     }
 
     public function index(Request $request)
-    {
-        try {
-            $data = $request->validate([
-                'site_id' => 'required|string',
-                'user_id' => 'required|string',
-                'shift' => 'required',
-                'date' => 'required|date_format:Y-m-d',
-            ]);
-        } catch (ValidationException $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
-        }
-
-        $tz = 'Asia/Singapore';
-        $date = Carbon::createFromFormat('Y-m-d', $data['date'], $tz)->startOfDay();
-
-        $dbShift = $this->toDbShift($data['shift']);
-
-        $row = Attendance::query()
-            ->where('id_site', $data['site_id'])
-            ->where('id_user', $data['user_id'])
-            ->whereDate('date', $date->toDateString())
-            ->where('shift', $dbShift)
-            ->orderByDesc('created_at')
-            ->first();
-
-        if (!$row) {
-            return response()->json(['success' => true, 'data' => null]);
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => $this->formatRow($row, $tz),
+{
+    try {
+        $data = $request->validate([
+            'site_id' => 'required|string',
+            'user_id' => 'required|string',
+            'shift'   => 'required',
+            'date'    => 'required|date_format:Y-m-d',
         ]);
+    } catch (ValidationException $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
     }
+
+    $tz   = 'Asia/Singapore';
+    $date = Carbon::createFromFormat('Y-m-d', $data['date'], $tz)->startOfDay();
+    $dbShift = $this->toDbShift($data['shift']);
+
+    $row = Attendance::query()
+        ->where('id_site', $data['site_id'])
+        ->where('id_user', $data['user_id'])
+        ->whereDate('date', $date->toDateString())
+        ->where('shift', $dbShift)
+        ->orderByDesc('created_at')
+        ->first();
+
+    if (!$row) {
+        [$startMin, $endMin] = $this->getShiftWindowMinutes($dbShift);
+        $crossesMidnight = $startMin !== null && $endMin !== null && $startMin > $endMin;
+
+        if ($crossesMidnight) {
+            $now = Carbon::now($tz);
+            $nowMin = $now->hour * 60 + $now->minute;
+
+            if ($endMin !== null && $nowMin < $endMin) {
+                $prevDate = $date->copy()->subDay()->toDateString();
+
+                $row = Attendance::query()
+                    ->where('id_site', $data['site_id'])
+                    ->where('id_user', $data['user_id'])
+                    ->whereDate('date', $prevDate)
+                    ->where('shift', $dbShift)
+                    ->orderByDesc('created_at')
+                    ->first();
+            }
+        }
+    }
+
+    if (!$row) {
+        return response()->json(['success' => true, 'data' => null]);
+    }
+
+    return response()->json([
+        'success' => true,
+        'data'    => $this->formatRow($row, $tz),
+    ]);
+}
+
+protected function getShiftWindowMinutes(string $dbShift): array
+{
+    // Default aman bila setting tidak tersedia
+    $defaults = [
+        'day'           => ['09:00', '17:00'],
+        'night'         => ['20:00', '06:00'],
+        'relief day'    => ['09:00', '17:00'],
+        'relief night'  => ['20:00', '08:00'],
+    ];
+
+    $startStr = null; $endStr = null;
+
+    $s = class_exists(AttendanceSetting::class) ? AttendanceSetting::query()->first() : null;
+
+    if ($s) {
+        if ($dbShift === 'day') {
+            $startStr = $s->day_shift_start_time;
+            $endStr   = $s->day_shift_end_time;
+        } elseif ($dbShift === 'night') {
+            $startStr = $s->night_shift_start_time;
+            $endStr   = $s->night_shift_end_time;
+        } elseif ($dbShift === 'relief day') {
+            $startStr = $s->relief_day_shift_start_time;
+            $endStr   = $s->relief_day_shift_end_time;
+        } elseif ($dbShift === 'relief night') {
+            $startStr = $s->relief_night_shift_start_time;
+            $endStr   = $s->relief_night_shift_end_time;
+        }
+    }
+
+    if (!$startStr || !$endStr) {
+        [$startStr, $endStr] = $defaults[$dbShift] ?? [null, null];
+    }
+
+    return [$this->timeToMinutes($startStr), $this->timeToMinutes($endStr)];
+}
+
+protected function timeToMinutes(?string $t): ?int
+{
+    if (!$t) return null;
+    $parts = explode(':', $t);
+    if (count($parts) < 2) return null;
+    $h = (int) $parts[0];
+    $m = (int) $parts[1];
+    return ($h * 60) + $m;
+}
 
     public function getAttendance($id)
     {
