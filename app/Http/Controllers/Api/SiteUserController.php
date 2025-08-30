@@ -412,15 +412,13 @@ class SiteUserController extends Controller
             $scheduleDate = $relNightStartToday->toDateString();
         }
 
-        $data = SiteUser::with('attendance')
-            ->where('id_user', $id)
+        $data = SiteUser::where('id_user', $id)
             ->whereDate('date', $scheduleDate)
             ->orderBy('date', 'asc')
             ->first();
 
         if ($data) {
-            $datas = SiteUser::with('attendance')
-                ->where('id_user', $id)
+            $datas = SiteUser::where('id_user', $id)
                 ->where('id', '<>', $data->id)
                 ->where(function ($q) use ($now) {
                     $q->whereDate('date', '<', $now->toDateString())
@@ -433,8 +431,7 @@ class SiteUserController extends Controller
                 ->limit(2)
                 ->get();
         } else {
-            $datas = SiteUser::with('attendance')
-                ->where('id_user', $id)
+            $datas = SiteUser::where('id_user', $id)
                 ->where(function ($q) use ($now) {
                     $q->whereDate('date', '<', $now->toDateString())
                         ->orWhere(function ($q2) use ($now) {

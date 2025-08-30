@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Validation\Rules\File as FileRule;
+use Str;
+use Throwable;
 
 class IncidentController extends Controller
 {
@@ -49,86 +51,94 @@ class IncidentController extends Controller
     }
 
 
-    public function store(Request $request)
+public function store(Request $request)
     {
         try {
-            DB::beginTransaction();
+            $validated = $request->validate([
+                'incident_type_id'     => ['required','string','exists:incident_types,id'],
+                'occurred_at'       => ['required','date'],
+                'location'          => ['nullable','string','max:255'],
 
-            $imagePath = '';
-            if ($request->cctv_image) {
-                $image = $request->cctv_image;
-                $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $image));
-                $imageName = uniqid() . '.png';
-                Storage::disk('public')->put("incidents/cctv/{$imageName}", $imageData);
-                $imagePath = "incidents/cctv/{$imageName}";
+                'why_happened'      => ['nullable','string'],
+                'how_happened'      => ['nullable','string'],
+                'person_involved'   => ['nullable','string','max:255'],
+                'person_injured'    => ['nullable','string','max:255'],
+
+                'management_report' => ['nullable','in:0,1'],
+                'police_report'     => ['nullable','in:0,1'],
+                'damage_property'   => ['nullable','in:0,1'],
+                'picture_attached'  => ['nullable','in:0,1'],
+                'cctv_footage'      => ['nullable','in:0,1'],
+
+                'remarks'           => ['nullable','string'],
+                'detail'            => ['nullable','string'],
+                'acknowledged_by'   => ['nullable','string','max:255'],
+
+'images.*' => ['nullable', FileRule::image()->max(5 * 1024)],
+            ]);
+
+            // siapkan bool (frontend kirim "1"/"0")
+            $bool = fn($key) => (int)($request->input($key, 0)) === 1;
+
+            $images = [];
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $img) {
+                    if (!$img) continue;
+                    // simpan di storage/app/public/incidents
+                    $path = $img->store('incidents', 'public');
+                    $images[] = $path;
+                }
             }
 
+            DB::beginTransaction();
+
             $incident = Incident::create([
-                'id' => Uuid::uuid4(),
-                'site_id' => $request->site_id,
-                'incident_type_id' => $request->incident_type_id,
-                'why_happened' => $request->why_happened,
-                'how_happened' => $request->how_happened,
-                'persons_involved' => $request->persons_involved,
-                'persons_injured' => $request->persons_injured,
-                'happened_at' => $request->happened_at,
-                'details' => $request->details,
-                'ops_incharge' => $request->ops_incharge,
-                'reported_to_management' => $request->reported_to_management ?? false,
-                'management_report_note' => $request->management_report_note,
-                'reported_to_police' => $request->reported_to_police ?? false,
-                'police_report_note' => $request->police_report_note,
-                'property_damaged' => $request->property_damaged ?? false,
-                'damage_note' => $request->damage_note,
-                'cctv_image' => $imagePath,
+                'id'                => Str::uuid(),
+                'id_user'           => Auth::id(), // null jika tidak pakai auth
+                'id_incident_type'     => $validated['incident_type_id'],
+                'reported_date'       => $validated['occurred_at'],
+                'location'          => $validated['location'] ?? null,
+
+                'why_happened'      => $validated['why_happened'] ?? null,
+                'how_happened'      => $validated['how_happened'] ?? null,
+                'person_involved'   => $validated['person_involved'] ?? null,
+                'person_injured'    => $validated['person_injured'] ?? null,
+
+                'management_report' => $bool('management_report'),
+                'police_report'     => $bool('police_report'),
+                'damage_property'   => $bool('damage_property'),
+                'picture_attached'  => $bool('picture_attached'),
+                'cctv_footage'      => $bool('cctv_footage'),
+
+                'remarks'           => $validated['remarks'] ?? null,
+                'detail'            => $validated['detail'] ?? null,
+                'acknowledged_by'   => $validated['acknowledged_by'] ?? null,
+
+                'images'            => $images ?: null,
             ]);
 
             DB::commit();
 
-            AuditLogger::log(
-                'Incident Created',
-                "New Employee Created:\n" .
-                    "ID: {$incident->id}\n" .
-                    "Site ID: {$incident->site_id}\n" .
-                    "Incident Type ID: {$incident->incident_type_id}\n" .
-                    "Why Happened: {$incident->why_happened}\n" .
-                    "How Happened: {$incident->how_happened}\n" .
-                    "Persons Involved: {$incident->persons_involved}\n" .
-                    "Persons Injured: {$incident->persons_injured}\n" .
-                    "Happened At: {$incident->happened_at}\n" .
-                    "Details: {$incident->details}\n" .
-                    "Ops Incharge: {$incident->ops_incharge}\n" .
-                    "Reported To Management: {$incident->reported_to_management}\n" .
-                    "Management Report Note: {$incident->management_report_note}\n" .
-                    "Reported To Police: {$incident->reported_to_police}\n" .
-                    "Police Report Note: {$incident->police_report_note}\n" .
-                    "Property Damaged: {$incident->property_damaged}\n" .
-                    "Damage Note: {$incident->damage_note}\n" .
-                    "CCTV Image: {$incident->$imagePath}\n",
-                'success',
-                $request->user()->id ?? null,
-                'create incident'
-            );
+            // optionally ubah ke URL publik
+            if ($incident->images) {
+                $incident->images = array_map(
+                    fn($p) => Storage::disk('public')->url($p),
+                    $incident->images
+                );
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Incident created successfully'
-            ]);
-        } catch (\Throwable $th) {
+                'message' => 'Incident created',
+                'data' => $incident,
+            ], 201);
+        } catch (Throwable $e) {
             DB::rollBack();
-
-            AuditLogger::log(
-                'Incident Creation Failed',
-                "Error: " . $th->getMessage(),
-                'error',
-                $request->user()->id ?? null,
-                'create incident'
-            );
-
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Something went wrong'
-            ], 500);
+                'message' => 'Oops! Something went wrong',
+                'error'   => config('app.debug') ? $e->getMessage() : null,
+            ], 422);
         }
     }
 

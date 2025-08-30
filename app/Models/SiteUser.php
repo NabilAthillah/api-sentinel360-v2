@@ -24,9 +24,4 @@ class SiteUser extends Model
     {
         return $this->belongsTo(User::class, 'id_user', 'id');
     }
-
-    public function attendance()
-    {
-        return $this->hasOne(Attendance::class, 'id_site_employee', 'id');
-    }
 }

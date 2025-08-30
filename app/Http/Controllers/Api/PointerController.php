@@ -11,11 +11,11 @@ use Illuminate\Support\Facades\Auth;
 
 class PointerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         return response()->json([
             'success' => true,
-            'data' => Pointer::with('route')->get(),
+            'data' => Pointer::with('route')->where('id_site', $request->id)->get(),
         ]);
     }
 
@@ -27,6 +27,7 @@ class PointerController extends Controller
                 'name' => 'required|string',
                 'nfc_tag' => 'required|string',
                 'id_route' => 'required|string',
+                'id_site' => 'required|string',
                 'remarks' => 'nullable|string',
             ]);
 
@@ -82,6 +83,7 @@ class PointerController extends Controller
 
             $before = [
                 'id_route' => $pointer->id_route,
+                'id_site' => $pointer->id_site,
                 'name' => $pointer->name,
                 'nfc_tag' => $pointer->nfc_tag,
                 'remarks' => $pointer->remarks ?? '',
@@ -89,6 +91,7 @@ class PointerController extends Controller
 
             $validated = $request->validate([
                 'id_route' => ['required', 'uuid', 'exists:routes,id'],
+                'id_site' => ['required', 'uuid', 'exists:sites,id'],
                 'name' => ['required', 'string'],
                 'nfc_tag' => ['required', 'string', 'max:191'],
                 'remarks' => ['nullable', 'string', 'max:1000'],
@@ -101,6 +104,7 @@ class PointerController extends Controller
 
             $after = [
                 'id_route' => $pointer->id_route,
+                'id_site' => $pointer->id_site,
                 'id_site' => $pointer->id_site,
                 'nfc_tag' => $pointer->nfc_tag,
                 'remarks' => $pointer->remarks ?? '',
