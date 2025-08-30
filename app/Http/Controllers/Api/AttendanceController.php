@@ -282,6 +282,7 @@ class AttendanceController extends Controller
             'user_id' => 'required',
             'shift' => ['required', Rule::in(['day', 'night', 'relief day', 'relief night'])],
             'date' => 'required|date_format:Y-m-d',
+            'reason' => 'nullable|string'
         ]);
 
         $settings = AttendanceSetting::firstOrFail();
@@ -304,7 +305,7 @@ class AttendanceController extends Controller
         [$start, $end] = $this->shiftStartEnd($data['shift'], $data['date'], $settings, $tz);
         $endPlusGrace = $end->copy()->addMinutes((int) $settings->grace_period);
 
-        if ($now->lt($end)) {
+        if ($now->lt($end) && !$req->reason) {
             return response()->json(['success' => false, 'message' => "Check-out window hasn't started yet"], 422);
         }
         if ($now->gt($endPlusGrace)) {
@@ -312,6 +313,11 @@ class AttendanceController extends Controller
         }
 
         $att->time_out = $now->format('H:i:s');
+
+        if ($req->reason) {
+            $att->reason = $req->reason;
+        }
+
         $att->save();
 
         return response()->json(['success' => true, 'message' => 'Checked out', 'data' => $att]);
@@ -332,7 +338,7 @@ class AttendanceController extends Controller
                 $s = $settings->relief_day_shift_start_time;
                 $e = $settings->relief_day_shift_end_time;
                 break;
-            case 'relief-night':
+            case 'relief night':
                 $s = $settings->relief_night_shift_start_time;
                 $e = $settings->relief_night_shift_end_time;
                 break;

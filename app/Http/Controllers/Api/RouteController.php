@@ -41,16 +41,35 @@ class RouteController extends Controller
                 ], 404);
             }
 
+            if ($request->only('status')) {
+                AuditLogger::log(
+                    "Route status updated by " . (Auth::user()->email ?? 'Unknown'),
+                    'Status Before: ' . $route->status . "\nStatus After: " . $request->status,
+                    'success',
+                    Auth::id(),
+                    'update site route'
+                );
+
+                $route->status = $request->status;
+                $route->save();
+
+                DB::commit();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Route status updated successfully',
+                    'data' => $route
+                ], 200);
+            }
+
             $before = [
                 'name' => $route->name,
-                'status' => $route->status,
-                'route' => $route->route,
+                'route' => $route->route ?? '',
                 'remarks' => $route->remarks ?? ''
             ];
 
             $route->update([
                 'name' => $request->name ?? $route->name,
-                'status' => $request->status ?? $route->status,
                 'route' => $request->route ?? $route->route,
                 'remarks' => $request->remarks ?? $route->remarks
             ]);
@@ -58,10 +77,9 @@ class RouteController extends Controller
             DB::commit();
 
             $after = [
-                'name' => $route->name,
-                'status' => $route->status,
-                'route' => $request->route,
-                'remarks' => $request->remarks
+                'name' => $request->name ?? $route->name,
+                'route' => $request->route ?? $route->route,
+                'remarks' => $request->remarks ?? $route->remarks
             ];
 
             $desc = "Data before update:\n";
@@ -83,7 +101,7 @@ class RouteController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Route updated successfully'
+                'message' => 'Route updated successfully',
             ], 200);
         } catch (\Throwable $th) {
             DB::rollBack();
