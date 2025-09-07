@@ -31,6 +31,7 @@ class LeaveManagementController extends Controller
 
     public function store(Request $request)
     {
+        \Log::info('Payload diterima:', $request->all());
         $request->validate([
             'type' => 'required|string',
             'reason' => 'nullable|string',
@@ -43,6 +44,7 @@ class LeaveManagementController extends Controller
             $from = Carbon::parse($request->from);
             $to   = Carbon::parse($request->to);
             $total = $from->diffInDays($to) + 1;
+            \Log::info('User ID dari Auth:', ['id' => Auth::id()]);
 
             $leave = LeaveManagement::create([
                 'id_user'        => Auth::id(),
@@ -86,6 +88,7 @@ class LeaveManagementController extends Controller
             ], 201);
         } catch (\Throwable $th) {
             DB::rollBack();
+            \Log::info('LeaveManagement Store Called', $request->all());
             AuditLogger::log(
                 'Create Leave Failed',
                 'Exception: ' . $th->getMessage(),

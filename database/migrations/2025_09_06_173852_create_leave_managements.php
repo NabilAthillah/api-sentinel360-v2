@@ -20,7 +20,7 @@ return new class extends Migration
             $table->date('to');
             $table->string('total');
             $table->string('reason')->nullable();
-            $table->enum('status', ['approve', 'rejected' ,'pending'])->default('active');
+            $table->enum('status', ['approve', 'rejected' ,'pending'])->default('pending');
             $table->timestamps();
         });
     }
