@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('leave_managements', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary()->unique();
             $table->string('id_user');
             $table->foreign('id_user')->references('id')->on('users');
             $table->string('type');
@@ -20,7 +20,7 @@ return new class extends Migration
             $table->date('to');
             $table->string('total');
             $table->string('reason')->nullable();
-            $table->enum('status', ['active', 'deactive'])->default('active');
+            $table->enum('status', ['approve', 'rejected' ,'pending'])->default('active');
             $table->timestamps();
         });
     }

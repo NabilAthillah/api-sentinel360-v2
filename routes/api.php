@@ -20,10 +20,8 @@ use App\Http\Controllers\Api\SOPDocumentController;
 use App\Http\Controllers\Api\AuditTrailsController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\LanguageController;
-use App\Http\Controllers\api\LeaveManagemetController;
-use App\Http\Controllers\UserLanguageController;
-use App\Models\AttendanceSetting;
-use App\Models\LeaveManagement;
+use App\Http\Controllers\api\LeaveManagementController;
+
 use App\Models\SOPDocument;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
@@ -58,7 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
         'incidents' => IncidentController::class,
         'pointers' => PointerController::class,
         'attendances' => AttendanceController::class,
-        'leave-managements'=> LeaveManagement::class
+        'leave-managements'=> LeaveManagementController::class,
 
     ]);
 

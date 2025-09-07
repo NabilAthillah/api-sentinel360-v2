@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\api;
 
-use App\Helpers\AuditLogger;
 use App\Http\Controllers\Controller;
 use App\Models\LeaveManagement;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use DB;
+use App\Helpers\AuditLogger;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
-class LeaveManagemetController extends Controller
+class LeaveManagementController extends Controller
 {
     public function index(Request $request)
     {
@@ -51,7 +51,7 @@ class LeaveManagemetController extends Controller
                 'to'             => $request->to,
                 'total'          => $total,
                 'reason'        =>  $request->reason,
-                'status'         => 'active',
+                'status'         => 'pending',
             ]);
 
             if (!$leave) {
@@ -86,7 +86,6 @@ class LeaveManagemetController extends Controller
             ], 201);
         } catch (\Throwable $th) {
             DB::rollBack();
-
             AuditLogger::log(
                 'Create Leave Failed',
                 'Exception: ' . $th->getMessage(),
