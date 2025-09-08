@@ -127,7 +127,7 @@ class EmployeeDocumentPivotController extends Controller
                 "Document '{$document->name}' uploaded for Employee: {$employee->name} (ID: {$employee->id})\nPath: {$storagePath}",
                 'success',
                 $request->user()->id ?? null,
-                 'upload employee document'
+                'upload employee document'
             );
 
             return response()->json([
@@ -142,7 +142,7 @@ class EmployeeDocumentPivotController extends Controller
                 'Exception: ' . $th->getMessage(),
                 'error',
                 $request->user()->id ?? null,
-                 'upload employee document'
+                'upload employee document'
             );
 
             return response()->json([
@@ -152,4 +152,6 @@ class EmployeeDocumentPivotController extends Controller
             ], 500);
         }
     }
+
+    
 }

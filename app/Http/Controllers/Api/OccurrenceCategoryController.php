@@ -151,4 +151,58 @@ class OccurrenceCategoryController extends Controller
             ], 500);
         }
     }
+
+    public function destroy($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $occ = OccurrenceCategory::find($id);
+
+            if (!$occ) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Occurrence Category not found'
+                ], 404);
+            }
+
+            $deletedData = $occ->toArray();
+
+            if ($occ->document != '') {
+                Storage::delete($occ->document);
+            }
+
+            $occ->delete();
+
+            DB::commit();
+
+            AuditLogger::log(
+                (Auth::user()->email ?? 'Unknown') . " deleted Occurrence Category: {$deletedData['name']}",
+                json_encode($deletedData, JSON_PRETTY_PRINT),
+                'success',
+                Auth::id(),
+                'delete Occurrence Category'
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Occurrence Category deleted successfully'
+            ]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            AuditLogger::log(
+                "Failed to delete Occurrence Category ID: {$id}",
+                "Error: " . $th->getMessage(),
+                'error',
+                Auth::id(),
+                'delete Occurrence Category'
+            );
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Oops! Something went wrong'
+            ], 500);
+        }
+    }
 }

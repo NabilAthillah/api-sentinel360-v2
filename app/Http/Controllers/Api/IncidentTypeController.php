@@ -147,4 +147,58 @@ class IncidentTypeController extends Controller
             ], 500);
         }
     }
+
+    public function destroy($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $inc = IncidentType::find($id);
+
+            if (!$inc) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Incident Type not found'
+                ], 404);
+            }
+
+            $deletedData = $inc->toArray();
+
+            if ($inc->document != '') {
+                Storage::delete($inc->document);
+            }
+
+            $inc->delete();
+
+            DB::commit();
+
+            AuditLogger::log(
+                (Auth::user()->email ?? 'Unknown') . " deleted Incident Type: {$deletedData['name']}",
+                json_encode($deletedData, JSON_PRETTY_PRINT),
+                'success',
+                Auth::id(),
+                'delete Incident Type'
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Incident Type deleted successfully'
+            ]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            AuditLogger::log(
+                "Failed to delete Incident Type ID: {$id}",
+                "Error: " . $th->getMessage(),
+                'error',
+                Auth::id(),
+                'delete Incident Type'
+            );
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Oops! Something went wrong'
+            ], 500);
+        }
+    }
 }

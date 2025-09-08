@@ -29,5 +29,10 @@ class Site extends Model
     {
         return $this->hasMany(Incident::class);
     }
+
+    public function leave()
+    {
+        return $this->hasMany(LeaveManagement::class, 'id_leave_management', 'id');
+    }
 }
 

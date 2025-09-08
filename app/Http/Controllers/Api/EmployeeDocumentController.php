@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\EmployeeDocument;
 use DB;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Auth;
 class EmployeeDocumentController extends Controller
 {
     public function index()
@@ -143,6 +143,60 @@ class EmployeeDocumentController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Oops! Something went wrong' . $th->getMessage()
+            ], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $emp = EmployeeDocument::find($id);
+
+            if (!$emp) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Employee Document not found'
+                ], 404);
+            }
+
+            $deletedData = $emp->toArray();
+
+            if ($emp->document != '') {
+                Storage::delete($emp->document);
+            }
+
+            $emp->delete();
+
+            DB::commit();
+
+            AuditLogger::log(
+                (Auth::user()->email ?? 'Unknown') . " deleted Employee Document: {$deletedData['name']}",
+                json_encode($deletedData, JSON_PRETTY_PRINT),
+                'success',
+                Auth::id(),
+                'delete Employee Document'
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Employee Document deleted successfully'
+            ]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            AuditLogger::log(
+                "Failed to delete Employee Document ID: {$id}",
+                "Error: " . $th->getMessage(),
+                'error',
+                Auth::id(),
+                'delete Employee Document'
+            );
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Oops! Something went wrong'
             ], 500);
         }
     }

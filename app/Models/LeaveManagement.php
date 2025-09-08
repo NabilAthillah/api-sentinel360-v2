@@ -19,4 +19,8 @@ class LeaveManagement extends Model
     {
         return $this->belongsTo(LeaveManagementType::class, 'id_leave_management_type');
     }
+    public function site()
+    {
+        return $this->belongsTo(Site::class, 'id_site', 'id');
+    }
 }

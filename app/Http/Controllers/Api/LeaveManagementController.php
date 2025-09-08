@@ -33,6 +33,7 @@ class LeaveManagementController extends Controller
     {
         \Log::info('Payload diterima:', $request->all());
         $request->validate([
+            'id_site' => 'required|exists:sites,id',
             'type' => 'required|string',
             'reason' => 'nullable|string',
             'from' => 'required|date',
@@ -48,6 +49,7 @@ class LeaveManagementController extends Controller
 
             $leave = LeaveManagement::create([
                 'id_user'        => Auth::id(),
+                'id_site'        => $request->id_site,
                 'type'           => $request->type,
                 'from'           => $request->from,
                 'to'             => $request->to,

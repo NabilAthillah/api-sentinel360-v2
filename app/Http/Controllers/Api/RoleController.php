@@ -9,6 +9,7 @@ use App\Models\RolePermission;
 use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Storage;
 
 class RoleController extends Controller
 {
@@ -170,6 +171,62 @@ class RoleController extends Controller
                 'error',
                 Auth::id(),
                 'update role'
+            );
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Oops! Something went wrong'
+            ], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $role = Role::find($id);
+
+            if (!$role) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Role not found'
+                ], 404);
+            }
+
+            $deletedData = $role->toArray();
+
+            DB::table('role_permission')->where('id_role', $id)->delete();
+
+            if (!empty($role->document)) {
+                Storage::delete($role->document);
+            }
+
+            $role->delete();
+
+            DB::commit();
+
+            AuditLogger::log(
+                (Auth::user()->email ?? 'Unknown') . " deleted Role: {$deletedData['name']}",
+                json_encode($deletedData, JSON_PRETTY_PRINT),
+                'success',
+                Auth::id(),
+                'delete Role'
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Role deleted successfully'
+            ]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            AuditLogger::log(
+                "Failed to delete Role ID: {$id}",
+                "Error: " . $th->getMessage(),
+                'error',
+                Auth::id(),
+                'delete Role'
             );
 
             return response()->json([

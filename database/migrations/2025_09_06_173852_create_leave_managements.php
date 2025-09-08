@@ -15,12 +15,14 @@ return new class extends Migration
             $table->uuid('id')->primary()->unique();
             $table->string('id_user');
             $table->foreign('id_user')->references('id')->on('users');
+            $table->string('id_site');
+            $table->foreign('id_site')->references('id')->on('sites');
             $table->string('type');
             $table->date('from');
             $table->date('to');
             $table->string('total');
             $table->string('reason')->nullable();
-            $table->enum('status', ['approve', 'rejected' ,'pending'])->default('pending');
+            $table->enum('status', ['approve', 'rejected', 'pending'])->default('pending');
             $table->timestamps();
         });
     }
