@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\EmployeeDocumentController;
 use App\Http\Controllers\Api\EmployeeDocumentPivotController;
 use App\Http\Controllers\Api\IncidentController;
 use App\Http\Controllers\Api\IncidentTypeController;
+use App\Http\Controllers\api\LeaveManagementTypeController;
 use App\Http\Controllers\Api\OccurrenceCategoryController;
 use App\Http\Controllers\Api\OccurrenceController;
 use App\Http\Controllers\Api\PermissionController;
@@ -57,7 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
         'pointers' => PointerController::class,
         'attendances' => AttendanceController::class,
         'leave-managements'=> LeaveManagementController::class,
-
+        'leave-types'=> LeaveManagementTypeController::class,
     ]);
 
     Route::prefix('master-settings')->name('master-settings.')->group(function () {

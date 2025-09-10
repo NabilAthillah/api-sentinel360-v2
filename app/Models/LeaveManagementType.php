@@ -9,7 +9,7 @@ class LeaveManagementType extends Model
 {
     use HasUuids;
 
-    protected $table = 'leave_managements';
+    protected $table = 'leave_managements_type';
     protected $primaryKey = 'id';
     protected $keyType = 'string';
     public $incrementing = false;

@@ -116,7 +116,7 @@ class SiteUserController extends Controller
                 $startOfMonth = Carbon::createFromFormat('Y-m', $dateInput)->startOfMonth();
                 $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
-                SiteUser::where('id_employee', $employee->id)
+                SiteUser::where('id_user', $employee->id)
                     ->where('id_site', $site->id)
                     ->where('shift', $shiftType)
                     ->whereBetween('date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
