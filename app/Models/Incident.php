@@ -15,7 +15,10 @@ class Incident extends Model
     public $incrementing = false;
     protected $guarded = [];
 
-    
+    protected $casts = [
+        'picture' => 'array', // biar array otomatis di-encode JSON pas save
+    ];
+
     public function site()
     {
         return $this->belongsTo(Site::class, 'site_id', 'id');
@@ -24,5 +27,10 @@ class Incident extends Model
     public function incidentType()
     {
         return $this->belongsTo(IncidentType::class, 'incident_type_id', 'id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'id_user');
     }
 }

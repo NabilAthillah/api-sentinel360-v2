@@ -19,7 +19,7 @@ class IncidentController extends Controller
     public function index()
     {
         try {
-            $incidents = Incident::with(['site', 'incidentType'])->get();
+            $incidents = Incident::with(['user', 'site', 'incidentType'])->get();
 
             return response()->json([
                 'success' => true,
@@ -51,30 +51,30 @@ class IncidentController extends Controller
     }
 
 
-public function store(Request $request)
+    public function store(Request $request)
     {
         try {
             $validated = $request->validate([
-                'incident_type_id'     => ['required','string','exists:incident_types,id'],
-                'occurred_at'       => ['required','date'],
-                'location'          => ['nullable','string','max:255'],
+                'incident_type_id'     => ['required', 'string', 'exists:incident_types,id'],
+                'occurred_at'       => ['required', 'date'],
+                'location'          => ['nullable', 'string', 'max:255'],
 
-                'why_happened'      => ['nullable','string'],
-                'how_happened'      => ['nullable','string'],
-                'person_involved'   => ['nullable','string','max:255'],
-                'person_injured'    => ['nullable','string','max:255'],
+                'why_happened'      => ['nullable', 'string'],
+                'how_happened'      => ['nullable', 'string'],
+                'person_involved'   => ['nullable', 'string', 'max:255'],
+                'person_injured'    => ['nullable', 'string', 'max:255'],
 
-                'management_report' => ['nullable','in:0,1'],
-                'police_report'     => ['nullable','in:0,1'],
-                'damage_property'   => ['nullable','in:0,1'],
-                'picture_attached'  => ['nullable','in:0,1'],
-                'cctv_footage'      => ['nullable','in:0,1'],
+                'management_report' => ['nullable', 'in:0,1'],
+                'police_report'     => ['nullable', 'in:0,1'],
+                'damage_property'   => ['nullable', 'in:0,1'],
+                'picture_attached'  => ['nullable', 'in:0,1'],
+                'cctv_footage'      => ['nullable', 'in:0,1'],
 
-                'remarks'           => ['nullable','string'],
-                'detail'            => ['nullable','string'],
-                'acknowledged_by'   => ['nullable','string','max:255'],
+                'remarks'           => ['nullable', 'string'],
+                'detail'            => ['nullable', 'string'],
+                'acknowledged_by'   => ['nullable', 'string', 'max:255'],
 
-'images.*' => ['nullable', FileRule::image()->max(5 * 1024)],
+                'images.*' => ['nullable', FileRule::image()->max(5 * 1024)],
             ]);
 
             // siapkan bool (frontend kirim "1"/"0")
@@ -94,27 +94,28 @@ public function store(Request $request)
 
             $incident = Incident::create([
                 'id'                => Str::uuid(),
-                'id_user'           => Auth::id(), // null jika tidak pakai auth
+                'id_user'           => Auth::id(),
                 'id_incident_type'     => $validated['incident_type_id'],
                 'reported_date'       => $validated['occurred_at'],
                 'location'          => $validated['location'] ?? null,
-
+                'incident_date'        => $validated['occurred_at'],
+                'id_site'              => $request->id_site,
                 'why_happened'      => $validated['why_happened'] ?? null,
-                'how_happened'      => $validated['how_happened'] ?? null,
+                'how_it_happened'      => $validated['how_happened'] ?? null,
                 'person_involved'   => $validated['person_involved'] ?? null,
                 'person_injured'    => $validated['person_injured'] ?? null,
 
-                'management_report' => $bool('management_report'),
-                'police_report'     => $bool('police_report'),
-                'damage_property'   => $bool('damage_property'),
-                'picture_attached'  => $bool('picture_attached'),
+                'reported_to_management' => $bool('management_report'),
+                'reported_to_police'     => $bool('police_report'),
+                'any_damages_to_property'   => $bool('damage_property'),
+                'any_pictures_attached'  => $bool('picture_attached'),
                 'cctv_footage'      => $bool('cctv_footage'),
-
+                'footage'              => $bool('cctv_footage'),
                 'remarks'           => $validated['remarks'] ?? null,
-                'detail'            => $validated['detail'] ?? null,
+                'conclution'            => $validated['detail'] ?? null,
                 'acknowledged_by'   => $validated['acknowledged_by'] ?? null,
 
-                'images'            => $images ?: null,
+                'picture' => !empty($images) ? $images : [],
             ]);
 
             DB::commit();

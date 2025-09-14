@@ -86,6 +86,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/profile/{id}', 'updateProfile')->name('updateProfile');
     });
 
+    Route::controller(LeaveManagementController::class)->name('leave-managements')->prefix('leave-managements')->group(function(){
+        Route::put('/{id}/status', 'updateStatus')->name('updateStatus');
+    }); 
     Route::controller(AuthController::class)->name('auth.')->prefix('auth')->group(function () {
         Route::post('/login', 'login')->name('login')->withoutMiddleware('auth:sanctum');
         Route::post('/update-profile/{id}', 'updateProfile')->name('updateProfile');

@@ -23,4 +23,8 @@ class LeaveManagement extends Model
     {
         return $this->belongsTo(Site::class, 'id_site', 'id');
     }
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'id_user');
+    }
 }

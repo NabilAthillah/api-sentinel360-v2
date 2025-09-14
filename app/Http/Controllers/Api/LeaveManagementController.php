@@ -15,7 +15,7 @@ class LeaveManagementController extends Controller
     public function index(Request $request)
     {
         try {
-            $leave_managements = LeaveManagement::get();
+            $leave_managements = LeaveManagement::with(['user', 'site'])->get();
 
             return response()->json([
                 'success' => true,
@@ -102,6 +102,74 @@ class LeaveManagementController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Oops! Something went wrong. ' . $th->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        DB::beginTransaction();
+
+        try {
+            $leave = LeaveManagement::find($id);
+
+            if (!$leave) {
+                AuditLogger::log(
+                    "Failed to update leave management status",
+                    "Leave with ID $id not found",
+                    'error',
+                    $request->user()->id ?? null,
+                    'update leave management status'
+                );
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Leave request not found'
+                ], 404);
+            }
+
+            $validStatuses = ['pending', 'approve', 'rejected'];
+            if (!in_array($request->status, $validStatuses)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid status value'
+                ], 400);
+            }
+
+            $oldStatus = $leave->status;
+
+            $leave->update(['status' => $request->status]);
+
+            DB::commit();
+
+            AuditLogger::log(
+                "Leave Status Updated",
+                "{$request->user()->email} updated leave ID {$leave->id} status from {$oldStatus} to {$request->status}",
+                'success',
+                $request->user()->id ?? null,
+                'update leave management status'
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Leave status updated successfully',
+                'data' => $leave
+            ], 200);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            AuditLogger::log(
+                "Failed to update leave status",
+                "Error: {$th->getMessage()}",
+                'error',
+                $request->user()->id ?? null,
+                'update leave management status'
+            );
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Oops! Something went wrong',
+                'error' => $th->getMessage()
             ], 500);
         }
     }
