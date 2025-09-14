@@ -109,7 +109,7 @@ class SiteController extends Controller
 
     public function show($id)
     {
-        $site = Site::with('routes')->where('id', $id)->first();
+        $site = Site::with('routes', 'routes.pointers')->where('id', $id)->first();
 
         if (!$site) {
             return response()->json([

@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\AuditTrailsController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\LanguageController;
 use App\Http\Controllers\api\LeaveManagementController;
+use App\Http\Controllers\Api\GuardTourController;
 
 use App\Models\SOPDocument;
 use Illuminate\Http\Request;
@@ -59,6 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
         'attendances' => AttendanceController::class,
         'leave-managements'=> LeaveManagementController::class,
         'leave-types'=> LeaveManagementTypeController::class,
+        'guard-tours' => GuardTourController::class
     ]);
 
     Route::prefix('master-settings')->name('master-settings.')->group(function () {
